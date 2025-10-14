@@ -1732,15 +1732,22 @@ export default function Home() {
                 </Link>
 
                 <Button
+                  asChild
                   variant="outline"
                   size={null}
                   className="w-full sm:w-auto sm:flex-1 lg:flex-none text-sm sm:text-base lg:text-lg px-4 sm:px-6 lg:px-8 py-3 sm:py-4 border-2 border-[#7A77FF]/30 text-[#7A77FF] hover:bg-[#7A77FF]/5 rounded-xl lg:rounded-2xl hover:text-[#7A77FF] font-bold"
                 >
-                  <Phone className="mr-2 w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
-                  <span className="hidden sm:inline">
-                    Gọi tư vấn: 0779 886 666
-                  </span>
-                  <span className="sm:hidden">0779 886 666</span>
+                  <a
+                    href="tel:+84779886666" // E.164 format cho ổn định: +84 cho VN
+                    aria-label="Gọi tư vấn 0779 886 666"
+                    target="_self"
+                  >
+                    <Phone className="mr-2 w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
+                    <span className="hidden sm:inline">
+                      Gọi tư vấn: 0779 886 666
+                    </span>
+                    <span className="sm:hidden">0779 886 666</span>
+                  </a>
                 </Button>
               </div>
 
@@ -2580,7 +2587,8 @@ export default function Home() {
               </span>
             </h2>
             <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
-              Từ ý tưởng đến hệ thống hoàn chỉnh chỉ trong 2-8 tuần
+              Từ ý tưởng đến hệ thống hoàn chỉnh chỉ trong 1-3 tuần tùy độ phức
+              tạp hệ thống
             </p>
           </div>
 
