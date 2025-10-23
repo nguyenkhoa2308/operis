@@ -147,8 +147,8 @@ export default function NotFound() {
                       transition={{ delay: 0.4 }}
                       className="text-center text-white/90 text-lg max-w-2xl mx-auto"
                     >
-                      Chúng tôi đang nỗ lực hoàn thiện tính năng này để mang
-                      đến trải nghiệm tuyệt vời nhất cho bạn
+                      Chúng tôi đang nỗ lực hoàn thiện tính năng này để mang đến
+                      trải nghiệm tuyệt vời nhất cho bạn
                     </motion.p>
                   </div>
                 </div>
@@ -182,9 +182,9 @@ export default function NotFound() {
                                 Sắp ra mắt
                               </Badge>
                             </div>
-                            <p className="text-3xl font-bold bg-gradient-to-r from-[#3DDAB4] to-[#7A77FF] bg-clip-text text-transparent">
+                            {/* <p className="text-3xl font-bold bg-gradient-to-r from-[#3DDAB4] to-[#7A77FF] bg-clip-text text-transparent">
                               17 tháng 10, 2025
-                            </p>
+                            </p> */}
                           </div>
                         </div>
                       </CardContent>

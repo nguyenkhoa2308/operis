@@ -2277,12 +2277,11 @@ export default function Home() {
         {/* Locked Form with Overlay */}
         <div className="relative">
           {/* Form content - slightly blurred */}
-          <div className="filter blur-[2px] pointer-events-none select-none opacity-40">
-            <RequestForm />
-          </div>
+          {/* <div className="filter blur-[2px] pointer-events-none select-none opacity-40"></div> */}
+          <RequestForm />
 
           {/* Simple Lock Overlay */}
-          <motion.div
+          {/* <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
@@ -2296,7 +2295,6 @@ export default function Home() {
               transition={{ duration: 0.5, delay: 0.5 }}
               className="text-center bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-6 sm:p-8 mx-4 border border-gray-200"
             >
-              {/* Lock Icon */}
               <motion.div
                 animate={{
                   y: [0, -5, 0],
@@ -2341,7 +2339,7 @@ export default function Home() {
                 </Button>
               </Link>
             </motion.div>
-          </motion.div>
+          </motion.div> */}
         </div>
       </section>
       {/* Problem Section */}

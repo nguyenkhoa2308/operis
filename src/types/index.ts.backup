@@ -1,0 +1,138 @@
+// ========================
+// Authentication Types
+// ========================
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  full_name: string;
+  phone: string;
+  role: string;
+  avatar: string;
+  bio: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AuthState {
+  isLoggedIn: boolean;
+  user: UserProfile | null;
+  access_token: string | null;
+  refresh_token: string | null;
+}
+
+export interface AuthConfig {
+  client_id: string;
+  google_enable: string;
+}
+
+export interface AuthResponse {
+  access: string;
+  refresh: string;
+  user: UserProfile;
+}
+
+export interface RegisterRequest {
+  email: string;
+  password: string;
+  full_name: string;
+  phone: string;
+  role: "customer" | "admin" | "sales" | "dev" | string;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+// ========================
+// Project Types
+// ========================
+
+export interface ProjectCustomer {
+  id: string;
+  company_name: string;
+  user_email: string;
+  user_name: string;
+}
+
+export interface ProjectManager {
+  id: string;
+  full_name: string;
+  email: string;
+  role: string;
+}
+
+export interface ProjectDetail {
+  id: string;
+  name: string;
+  description: string;
+  status: string;
+  priority: string;
+  customer: ProjectCustomer;
+  project_manager: ProjectManager | null;
+  start_date: string | null;
+  end_date: string | null;
+  estimated_hours: number | null;
+  budget: number | null;
+  repository_url: string | null;
+  staging_url: string | null;
+  production_url: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// ========================
+// Transaction Types
+// ========================
+
+export interface Transaction {
+  id: string;
+  project_id: string;
+  project_name: string;
+  customer_name: string;
+  customer_email: string;
+  transaction_type: string;
+  status: string;
+  amount: number;
+  phase_index: number | null;
+  phase_name: string | null;
+  payment_method: string;
+  transaction_reference: string | null;
+  description: string | null;
+  created_at: string;
+  completed_at: string | null;
+  processed_by: {
+    id: string;
+    name: string;
+  } | null;
+}
+
+// ========================
+// Review Types
+// ========================
+
+// ========================
+// AI Assistant Types
+// ========================
+
+// ========================
+// Project Chat Types
+// ========================
+
+// ========================
+// Proposal Types
+// ========================
+
+// ========================
+// Escalation Types
+// ========================
+
+// ========================
+// Financial Types
+// ========================
+
+// ========================
+// Employee Types
+// ========================

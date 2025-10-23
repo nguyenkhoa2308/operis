@@ -11,15 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-
-interface FAQ {
-  id: number;
-  category: string;
-  question: string;
-  answer: string;
-  popular?: boolean;
-  relatedQuestions?: number[]; // IDs of related questions
-}
+import { FAQ } from "@/types";
 
 interface FAQContentProps {
   faqs: FAQ[];

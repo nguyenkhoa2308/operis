@@ -4,14 +4,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Code, Briefcase, ChevronLeft, ChevronRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import useEmblaCarousel from "embla-carousel-react";
-
-interface TeamMember {
-  name: string;
-  role: string;
-  expertise: string;
-  projects: string;
-  image: string;
-}
+import { TeamMember } from "@/types";
 
 interface TeamCarouselProps {
   team: TeamMember[];

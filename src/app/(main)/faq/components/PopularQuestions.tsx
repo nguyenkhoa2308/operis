@@ -3,13 +3,7 @@
 import React from "react";
 import { Star, TrendingUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-
-interface FAQ {
-  category: string;
-  question: string;
-  answer: string;
-  popular?: boolean;
-}
+import { FAQ } from "@/types";
 
 interface PopularQuestionsProps {
   popularFAQs: FAQ[];

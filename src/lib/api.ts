@@ -1,678 +1,252 @@
-import {
-  AuthConfig,
-  AuthResponse,
-  LoginRequest,
-  RegisterRequest,
-  UserProfile,
-  ProjectsResponse,
-  AIRequirementsRequest,
-  PricingRequest,
-  CreateProjectRequest,
-  CreateProjectResponse,
-  ChatRequest,
-  ChatResponse,
-  ReviewResponse,
-  ReviewStats,
-  GetProjectsParams,
-  ProjectListItem,
-  PricingData,
-  ProjectDetail,
-  ChatMessagesResponse,
-  SendChatMessageRequest,
-  SendChatMessageResponse,
-  Transaction,
-  Proposal,
-  ReviewProposalRequest,
-  EscalationsResponse,
-  EscalationStatsResponse,
-  RespondToEscalationRequest,
-  ResolveEscalationRequest,
-  FinancialOverview,
-  PerformanceData,
-  Employee,
-  CreateEmployeeRequest,
-  UpdateEmployeeRequest,
-  AddBonusRequest,
-} from "@/types";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/**
+ * API client for backend communication
+ */
 import axios from "axios";
+import { getCookie } from "./utils";
 
-// Re-export types for external use
-export type {
-  ProjectListItem,
-  ReviewResponse,
-  ReviewStats,
-  GetProjectsParams,
-  SendChatMessageRequest,
-  // ChatMessageData,
-};
+// FORCE port 8001 to avoid conflict with background process on 8000
+const API_URL = "http://localhost:8000";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
-const apiClient = axios.create({
-  baseURL: API_URL,
+export const api = axios.create({
+  baseURL: `${API_URL}/api`,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// ========================
-// Authentication APIs
-// ========================
-
-/**
- * Get authentication configuration (Google Client ID)
- */
-export async function getAuthConfig(): Promise<AuthConfig> {
-  const response = await apiClient.get<AuthConfig>(
-    "/accounts/google-oauth-config"
-  );
-  return response.data;
-}
-
-/**
- * Register new user
- */
-export async function register(data: RegisterRequest): Promise<AuthResponse> {
-  const response = await apiClient.post<AuthResponse>(
-    "/accounts/register",
-    data
-  );
-  return response.data;
-}
-
-/**
- * Login with email and password
- */
-export async function loginWithPassword(
-  data: LoginRequest
-): Promise<AuthResponse> {
-  const response = await apiClient.post<AuthResponse>("/accounts/login", data);
-  return response.data;
-}
-
-/**
- * Login with Google ID token
- */
-export async function loginWithGoogle(idToken: string): Promise<AuthResponse> {
-  const response = await apiClient.post<AuthResponse>("/accounts/google-auth", {
-    google_token: idToken,
-  });
-  return response.data;
-}
-
-/**
- * Refresh access token using refresh token
- */
-export async function refreshToken(
-  refreshToken: string
-): Promise<AuthResponse> {
-  const response = await apiClient.post<AuthResponse>("/accounts/refresh", {
-    refresh: refreshToken,
-  });
-  return response.data;
-}
-
-/**
- * Verify email with token
- */
-export async function verifyEmail(token: string): Promise<void> {
-  const response = await apiClient.post<void>("/accounts/verify-email", {
-    token,
-  });
-  return response.data;
-}
-
-/**
- * Resend verification email
- */
-export async function resendVerificationEmail(email: string): Promise<void> {
-  const response = await apiClient.post<void>("/accounts/resend-verification", {
-    email,
-  });
-  return response.data;
-}
-
-/**
- * Request password reset email
- */
-export async function forgotPassword(email: string): Promise<void> {
-  const response = await apiClient.post<void>(
-    "/accounts/request-password-reset",
-    {
-      email,
-    }
-  );
-  return response.data;
-}
-
-/**
- * Reset password with token
- */
-export async function resetPassword(
-  token: string,
-  new_password: string
-): Promise<void> {
-  const response = await apiClient.post<void>("/accounts/reset-password", {
-    token,
-    new_password,
-  });
-  return response.data;
-}
-
-// ========================
-// User Profile APIs
-// ========================
-
-/**
- * Get user profile with access token
- */
-export async function getUserProfile(
-  userId: number,
-  accessToken: string
-): Promise<UserProfile> {
-  const response = await apiClient.get<UserProfile>("/accounts/profile", {
-    params: { user_id: userId },
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-  return response.data;
-}
-
-/**
- * Get all users
- */
-export async function getUsers(accessToken: string) {
-  const response = await apiClient.get("/accounts/users", {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  return response.data;
-}
-
-/**
- * Get user
- */
-export async function getCustomerInfo(customerId: string, accessToken: string) {
-  const response = await apiClient.get(`/accounts/users/${customerId}`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  return response.data;
-}
-
-// ========================
-// Project Management APIs
-// ========================
-
-/**
- * Get all projects with optional filters and parameters
- */
-export async function getProjects(
-  accessToken: string,
-  params?: GetProjectsParams
-): Promise<ProjectsResponse> {
-  const queryParams: Record<string, string | number> = {};
-
-  if (params?.status && params.status !== "all") {
-    queryParams.status = params.status;
-  }
-
-  if (params?.priority && params.priority !== "all") {
-    queryParams.priority = params.priority;
-  }
-
-  if (params?.page !== undefined) {
-    queryParams.page = params.page;
-  }
-
-  if (params?.page_size !== undefined && params.page_size !== null) {
-    queryParams.page_size = params.page_size;
-  }
-
-  const response = await apiClient.get<ProjectsResponse>("/projects/", {
-    headers: { Authorization: `Bearer ${accessToken}` },
-    params: queryParams,
-  });
-
-  return response.data;
-}
-
-/**
- * Get project detail by ID
- */
-export async function getProjectById(
-  projectId: string,
-  accessToken: string
-): Promise<ProjectDetail> {
-  const response = await apiClient.get<ProjectDetail>(
-    `/projects/${projectId}`,
-    {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    }
-  );
-  return response.data;
-}
-
-/**
- * Create new project
- */
-export async function createProject(
-  data: CreateProjectRequest,
-  accessToken: string
-): Promise<CreateProjectResponse> {
-  const response = await apiClient.post<CreateProjectResponse>(
-    "/projects/",
-    data,
-    {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    }
-  );
-  return response.data;
-}
-
-/**
- * Update project status or details
- */
-export async function updateProject(
-  projectId: string,
-  data: { status?: string; [key: string]: unknown },
-  accessToken: string
-) {
-  const response = await apiClient.put(`/projects/${projectId}`, data, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  return response.data;
-}
-
-/**
- * Assign project to sales and developer
- */
-export async function assignProject(
-  projectId: string,
-  data: {
-    sales_person_id: string;
-    developer_id: string;
+export const rawAPI = axios.create({
+  baseURL: `${API_URL}/api`,
+  headers: {
+    "Content-Type": "application/json",
   },
-  accessToken: string
-) {
-  const response = await apiClient.post(`/projects/${projectId}/assign`, data, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  return response.data;
-}
+});
 
-// ========================
-// AI Assistant APIs
-// ========================
-
-/**
- * Generate AI requirements for project
- */
-export async function generateAIRequirements(
-  data: AIRequirementsRequest,
-  accessToken: string
-) {
-  const response = await apiClient.post(
-    "/projects/ai/generate-requirements",
-    data,
-    {
-      headers: { Authorization: `Bearer ${accessToken}` },
+// Request interceptor to add auth token
+api.interceptors.request.use(
+  (config) => {
+    const token = getCookie("access_token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
-  );
-  return response;
-}
-
-/**
- * Calculate project price
- */
-export async function calculatePrice(
-  data: PricingRequest
-): Promise<PricingData> {
-  const response = await apiClient.post<PricingData>(
-    "/ai-sales/calculate-price",
-    data
-  );
-  return response.data;
-}
-
-/**
- * Chat with AI Sale assistant
- */
-export async function chatWithAI(
-  data: ChatRequest,
-  accessToken: string
-): Promise<ChatResponse> {
-  const response = await apiClient.post<ChatResponse>("/ai-sale/chat", data, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  return response.data;
-}
-
-// ========================
-// Payment Transactions APIs
-// ========================
-
-export async function getTransactions(
-  accessToken: string
-): Promise<Transaction[]> {
-  const response = await apiClient.get<Transaction[]>(
-    "/payments/transactions",
-    {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    }
-  );
-  return response.data;
-}
-
-// ========================
-// Reviews APIs
-// ========================
-
-/**
- * Get all reviews with optional filters
- */
-export async function getReviews(
-  params: {
-    sentiment?: string;
-    priority?: string;
+    return config;
   },
-  accessToken: string
-): Promise<{ data: ReviewResponse[] }> {
-  const searchParams = new URLSearchParams();
-  if (params.sentiment && params.sentiment !== "all") {
-    searchParams.append("sentiment", params.sentiment);
+  (error) => {
+    return Promise.reject(error);
   }
-  if (params.priority && params.priority !== "all") {
-    searchParams.append("priority", params.priority);
+);
+
+// Response interceptor for error handling
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config || {};
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      const refreshToken = getCookie("refresh_token");
+      if (!refreshToken) {
+        localStorage.clear();
+        window.location.href = "/login";
+        return Promise.reject(error);
+      }
+
+      try {
+        const res = await axios.post(`${API_URL}/api/auth/refresh`, {
+          refresh_token: refreshToken,
+        });
+
+        const newAccess =
+          res.data.access_token || res.data.access || res.data.token;
+        const newRefresh =
+          res.data.refresh_token || res.data.refresh || res.data.new_refresh;
+
+        if (!newAccess) throw new Error("No access token in refresh response");
+
+        localStorage.setItem("access_token", newAccess);
+        if (newRefresh) localStorage.setItem("refresh_token", newRefresh);
+
+        originalRequest.headers = {
+          ...originalRequest.headers,
+          Authorization: `Bearer ${newAccess}`,
+        };
+
+        return api(originalRequest);
+      } catch (refreshError) {
+        localStorage.clear();
+        window.location.href = "/login";
+        return Promise.reject(refreshError);
+      }
+    }
+
+    return Promise.reject(error);
   }
+);
 
-  const url = `/reviews${searchParams.toString() ? `?${searchParams}` : ""}`;
+// Auth API
+export const authAPI = {
+  register: (data: any) => rawAPI.post("/auth/register", data),
+  login: (email: string, password: string) =>
+    rawAPI.post("/auth/login", { email, password }),
+  refresh: (refreshToken: string) =>
+    rawAPI.post("/auth/refresh", { refresh_token: refreshToken }),
+  loginWithGoogle: (idToken: string) =>
+    rawAPI.post("/auth/google-auth", {
+      google_token: idToken,
+    }),
+  // verifyEmail: (email: string) => rawAPI.post("/auth/verify-email", email),
+  // resetPassword: (token: string, newPassword: string) =>
+  //   rawAPI.post("/auth/reset-password", newPassword),
+};
 
-  const response = await apiClient.get<{ data: ReviewResponse[] }>(url, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
+// User API
+export const userAPI = {
+  getMe: () => api.get("/users/me"),
+  list: (params?: any) => api.get("/users", { params }),
+  get: (id: string) => api.get(`/users/${id}`),
+  update: (id: string, data: any) => api.put(`/users/${id}`, data),
+  delete: (id: string) => api.delete(`/users/${id}`),
+};
 
-  return response.data;
-}
+// Services API
+export const servicesAPI = {
+  list: (params?: any) => api.get("/services", { params }),
+  get: (slug: string) => api.get(`/services/${slug}`),
+  create: (data: any) => api.post("/services", data),
 
-/**
- * Get review statistics
- */
-export async function getReviewStats(
-  accessToken: string
-): Promise<{ data: ReviewStats }> {
-  const response = await apiClient.get<{ data: ReviewStats }>(
-    "/reviews/stats/summary",
-    {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    }
-  );
+  // Service Requests
+  createRequest: (data: any) => api.post("/services/requests", data),
+  listRequests: (params?: any) => api.get("/services/requests", { params }),
+  getRequest: (id: string) => api.get(`/services/requests/${id}`),
+  updateRequest: (id: string, data: any) =>
+    api.put(`/services/requests/${id}`, data),
+};
 
-  return response.data;
-}
+// Projects API
+export const projectsAPI = {
+  list: (params?: any) => api.get("/projects", { params }),
+  all: (params?: any) => api.get("/projects/all", { params }),
+  get: (id: string) => api.get(`/projects/${id}`),
+  delete: (id: string) => api.delete(`/projects/${id}`),
+  create: (data: any) => api.post("/projects", data),
+  update: (id: string, data: any) => api.put(`/projects/${id}`, data),
 
-/**
- * Respond to a review
- */
-export async function respondToReview(
-  reviewId: string,
-  message: string,
-  accessToken: string
-): Promise<void> {
-  await apiClient.put(
-    `/reviews/${reviewId}/respond`,
-    { message },
-    {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    }
-  );
-}
+  // Chat
+  listMessages: (projectId: string, limit?: number) =>
+    api.get(`/projects/${projectId}/messages`, { params: { limit } }),
+  sendMessage: (projectId: string, data: any) =>
+    api.post(`/projects/${projectId}/messages`, data),
+  markMessageRead: (projectId: string, messageId: string) =>
+    api.post(`/projects/${projectId}/messages/${messageId}/read`),
+  getUnreadCount: (projectId: string) =>
+    api.get(`/projects/${projectId}/unread-count`),
+};
 
-// ========================
-// Project Chat APIs
-// ========================
+// Proposals API
+export const proposalsAPI = {
+  // List proposals for a project
+  list: (projectId: string) => api.get(`/projects/${projectId}/proposals`),
 
-/**
- * Get chat messages for a project
- */
-export async function getChatMessages(
-  projectId: string,
-  accessToken: string
-): Promise<ChatMessagesResponse> {
-  const response = await apiClient.get<ChatMessagesResponse>(
-    `/chat/project/${projectId}`,
-    {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    }
-  );
-  return response.data;
-}
+  // Get single proposal
+  get: (proposalId: string) => api.get(`/proposals/${proposalId}`),
 
-/**
- * Send a chat message to a project
- */
-export async function sendChatMessage(
-  data: SendChatMessageRequest,
-  accessToken: string
-): Promise<SendChatMessageResponse> {
-  const response = await apiClient.post<SendChatMessageResponse>(
-    "/chat/send",
-    data,
-    {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    }
-  );
-  return response.data;
-}
+  // Create new proposal (sales only)
+  create: (projectId: string, data: any) =>
+    api.post(`/projects/${projectId}/proposals`, data),
 
-// ========================
-// Proposals APIs
-// ========================
+  // Update proposal (sales only, draft only)
+  update: (proposalId: string, data: any) =>
+    api.put(`/proposals/${proposalId}`, data),
 
-/**
- * Get all proposals
- */
-export async function getProposals(accessToken: string): Promise<Proposal[]> {
-  const response = await apiClient.get<Proposal[]>(
-    "/proposals/?status=SUBMITTED",
-    {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    }
-  );
-  return response.data;
-}
+  // Send proposal to customer (sales only)
+  send: (proposalId: string) => api.post(`/proposals/${proposalId}/send`, {}),
 
-/**
- * Approve a proposal
- */
-export async function approveProposal(
-  proposalId: string,
-  data: ReviewProposalRequest,
-  accessToken: string
-): Promise<void> {
-  await apiClient.put(`/proposals/${proposalId}/approve`, data, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-}
+  // Customer accepts proposal
+  accept: (proposalId: string, data?: any) =>
+    api.post(`/proposals/${proposalId}/accept`, data || {}),
 
-/**
- * Reject a proposal
- */
-export async function rejectProposal(
-  proposalId: string,
-  data: ReviewProposalRequest,
-  accessToken: string
-): Promise<void> {
-  await apiClient.put(`/proposals/${proposalId}/reject`, data, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-}
+  // Customer rejects proposal
+  reject: (proposalId: string, data?: any) =>
+    api.post(`/proposals/${proposalId}/reject`, data || {}),
 
-// ========================
-// Escalations APIs
-// ========================
+  // === DEPOSIT PAYMENT (Initial payment) ===
+  // Customer submits deposit payment notification (waiting for admin approval)
+  submitPayment: (proposalId: string) =>
+    api.post(`/proposals/${proposalId}/submit-payment`, {}),
 
-/**
- * Get all escalations with optional filters
- */
-export async function getEscalations(
-  accessToken: string,
-  params?: {
-    status?: string;
-    severity?: string;
-  }
-): Promise<EscalationsResponse> {
-  const queryParams = new URLSearchParams();
-  if (params?.status && params.status !== "all") {
-    queryParams.append("status", params.status);
-  }
-  if (params?.severity && params.severity !== "all") {
-    queryParams.append("severity", params.severity);
-  }
+  // Admin/Sales approves customer's deposit payment submission
+  approvePayment: (proposalId: string) =>
+    api.post(`/proposals/${proposalId}/approve-payment`, {}),
 
-  const url = `/escalations${queryParams.toString() ? `?${queryParams}` : ""}`;
+  // Admin/Sales rejects customer's deposit payment submission
+  rejectPayment: (proposalId: string) =>
+    api.post(`/proposals/${proposalId}/reject-payment`, {}),
 
-  const response = await apiClient.get<EscalationsResponse>(url, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
+  // === PHASE-BASED PAYMENT (Per milestone) ===
+  // Sales/Admin marks phase as completed
+  markPhaseComplete: (proposalId: string, phaseIndex: number) =>
+    api.post(`/proposals/${proposalId}/phases/${phaseIndex}/complete`, {}),
 
-  return response.data;
-}
+  // Customer submits phase payment
+  submitPhasePayment: (proposalId: string, phaseIndex: number) =>
+    api.post(
+      `/proposals/${proposalId}/phases/${phaseIndex}/submit-payment`,
+      {}
+    ),
 
-/**
- * Get escalation statistics
- */
-export async function getEscalationStats(
-  accessToken: string
-): Promise<EscalationStatsResponse> {
-  const response = await apiClient.get<EscalationStatsResponse>(
-    "/escalations/stats/summary",
-    {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    }
-  );
+  // Admin/Sales approves phase payment
+  approvePhasePayment: (proposalId: string, phaseIndex: number) =>
+    api.post(
+      `/proposals/${proposalId}/phases/${phaseIndex}/approve-payment`,
+      {}
+    ),
 
-  return response.data;
-}
+  // Admin/Sales rejects phase payment
+  rejectPhasePayment: (proposalId: string, phaseIndex: number) =>
+    api.post(
+      `/proposals/${proposalId}/phases/${phaseIndex}/reject-payment`,
+      {}
+    ),
 
-/**
- * Respond to an escalation (Admin only)
- */
-export async function respondToEscalation(
-  escalationId: string,
-  data: RespondToEscalationRequest,
-  accessToken: string
-): Promise<void> {
-  await apiClient.put(`/escalations/${escalationId}/respond`, data, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-}
+  // [DEPRECATED] Use approvePayment instead
+  confirmPayment: (proposalId: string) =>
+    api.post(`/proposals/${proposalId}/confirm-payment`, {}),
+};
 
-/**
- * Resolve an escalation (Admin only)
- */
-export async function resolveEscalation(
-  escalationId: string,
-  data: ResolveEscalationRequest,
-  accessToken: string
-): Promise<void> {
-  await apiClient.put(`/escalations/${escalationId}/resolve`, data, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-}
+// Financials API
+export const financeAPI = {
+  getDashboard: () => api.get(`/finance/finance/dashboard`),
+  getTopCustomers: (params?: any) =>
+    api.get(`/finance/finance/top-customers`, { params }),
+  getPaymentStatusSummary: () =>
+    api.get(`/finance/finance/payment-status-summary`),
+};
 
-// ========================
-// Financial APIs
-// ========================
+// Transactions API
+export const transactionsAPI = {
+  list: (params?: any) => api.get("/transactions/transactions", { params }),
+  get: (id: string) => api.get(`/transactions/transactions/${id}`),
 
-/**
- * Get financial overview (Admin only)
- */
-export async function getFinancialOverview(
-  accessToken: string
-): Promise<FinancialOverview> {
-  const response = await apiClient.get<FinancialOverview>(
-    "/financial/overview",
-    {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    }
-  );
-  return response.data;
-}
+  createManual: (data: any) => api.post("/transactions/manual", data),
+  approve: (id: string) =>
+    api.post(`/transactions/transactions/${id}/approve`, {}),
+  reject: (id: string, reason: string) =>
+    api.post(`/transactions/transactions/${id}/reject`, { reason }),
 
-/**
- * Get employee performance data (Admin only)
- */
-export async function getEmployeePerformance(
-  accessToken: string
-): Promise<PerformanceData> {
-  const response = await apiClient.get<PerformanceData>(
-    "/financial/employee-performance",
-    {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    }
-  );
-  return response.data;
-}
+  projectTransactions: (projectId: string) =>
+    api.get(`/transactions/projects/${projectId}/transactions`),
+  financialSummary: (projectId: string) =>
+    api.get(`/transactions/projects/${projectId}/financial-summary`),
+};
 
-// ========================
-// Employee Management APIs
-// ========================
-
-/**
- * Get all employees (Admin only)
- */
-export async function getEmployees(accessToken: string): Promise<Employee[]> {
-  const response = await apiClient.get<Employee[]>("/employees", {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  return response.data;
-}
-
-/**
- * Create new employee (Admin only)
- */
-export async function createEmployee(
-  data: CreateEmployeeRequest,
-  accessToken: string
-): Promise<Employee> {
-  const response = await apiClient.post<Employee>("/employees", data, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  return response.data;
-}
-
-/**
- * Update employee information (Admin only)
- */
-export async function updateEmployee(
-  employeeId: string,
-  data: UpdateEmployeeRequest,
-  accessToken: string
-): Promise<Employee> {
-  const response = await apiClient.put<Employee>(
-    `/employees/${employeeId}`,
-    data,
-    {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    }
-  );
-  return response.data;
-}
-
-/**
- * Add bonus to employee (Admin only)
- */
-export async function addEmployeeBonus(
-  employeeId: string,
-  data: AddBonusRequest,
-  accessToken: string
-): Promise<Employee> {
-  const response = await apiClient.post<Employee>(
-    `/employees/${employeeId}/bonus`,
-    data,
-    {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    }
-  );
-  return response.data;
-}
+// Acceptance & Feedback API
+export const feedbackAPI = {
+  get: (projectId: string) =>
+    api.get(`/feedback/projects/${projectId}/acceptance`),
+  create: (projectId: string, data: any) =>
+    api.post(`/projects/${projectId}/feedback`, data),
+  update: (feedbackId: string, data: any) =>
+    api.put(`/feedback/${feedbackId}`, data),
+  delete: (feedbackId: string) => api.delete(`/feedback/${feedbackId}`),
+};
