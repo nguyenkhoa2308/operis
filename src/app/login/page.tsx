@@ -26,6 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useAuthStore } from "@/stores/auth.store";
+import { toast } from "sonner";
 // import { useAuthConfig } from "@/hooks/useAuthConfig";
 // import { authAPI } from "@/lib/api";
 
@@ -67,7 +68,10 @@ function LoginPageContent() {
 
   const handleGoogleError = () => {
     console.error("Google login error");
-    alert("Đăng nhập Google thất bại. Vui lòng thử lại.");
+    toast.error("Đăng nhập Google thất bại", {
+      description: "Vui lòng thử lại hoặc sử dụng phương thức khác.",
+      position: "top-right",
+    });
   };
 
   // Email/username and password login
@@ -78,12 +82,31 @@ function LoginPageContent() {
     try {
       const { ok, role } = await loginWithPassword(email, password);
       if (ok && role) {
+        toast.success("Đăng nhập thành công!", {
+          description: "Đang chuyển hướng đến dashboard...",
+          position: "top-right",
+        });
         router.replace(`/dashboard/${role === "dev" ? "developer" : role}`);
       } else {
-        alert("Đăng nhập thất bại.");
+        toast.error("Đăng nhập thất bại", {
+          description: "Email hoặc mật khẩu không chính xác. Vui lòng thử lại.",
+          position: "top-right",
+        });
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Login failed:", error);
+
+      // Extract error message
+      let errorMessage = "Đã xảy ra lỗi. Vui lòng thử lại.";
+      if (error && typeof error === "object" && "response" in error) {
+        const axiosError = error as { response?: { data?: { message?: string; detail?: string } } };
+        errorMessage = axiosError.response?.data?.message || axiosError.response?.data?.detail || errorMessage;
+      }
+
+      toast.error("Lỗi đăng nhập", {
+        description: errorMessage,
+        position: "top-right",
+      });
     } finally {
       setLoading(false);
     }

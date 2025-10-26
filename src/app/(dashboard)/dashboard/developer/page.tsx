@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { getCookie } from "@/lib/utils";
 import {
   FolderKanban,
   Clock,
@@ -16,6 +17,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Project } from "@/types";
+import { projectsAPI } from "@/lib/api";
 
 export default function DeveloperDashboard() {
   const router = useRouter();
@@ -34,37 +36,50 @@ export default function DeveloperDashboard() {
 
   const loadProjects = async () => {
     try {
-      const token =
-        localStorage.getItem("token") || localStorage.getItem("access_token");
-      if (!token) {
-        router.push("/login");
-        return;
-      }
+      // const token = getCookie("access_token");
+      // if (!token) {
+      //   router.push("/login");
+      //   return;
+      // }
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/projects`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      // const response = await fetch(
+      //   `${process.env.NEXT_PUBLIC_API_URL}/api/projects`,
+      //   {
+      //     headers: { Authorization: `Bearer ${token}` },
+      //   }
+      // );
 
-      if (response.ok) {
-        const data = await response.json();
-        setProjects(data);
+      // if (response.ok) {
+      //   const data = await response.json();
+      //   setProjects(data);
 
-        // Calculate stats
-        setStats({
-          total: data.length,
-          inProgress: data.filter((p: Project) => p.status === "in_progress")
-            .length,
-          completed: data.filter((p: Project) => p.status === "completed")
-            .length,
-          pending: data.filter(
-            (p: Project) =>
-              p.status === "planning" || p.status === "pending_acceptance"
-          ).length,
-        });
-      }
+      //   // Calculate stats
+      //   setStats({
+      //     total: data.length,
+      //     inProgress: data.filter((p: Project) => p.status === "in_progress")
+      //       .length,
+      //     completed: data.filter((p: Project) => p.status === "completed")
+      //       .length,
+      //     pending: data.filter(
+      //       (p: Project) =>
+      //         p.status === "planning" || p.status === "pending_acceptance"
+      //     ).length,
+      //   });
+      // }
+
+      const response = (await projectsAPI.list()).data;
+      setProjects(response);
+      setStats({
+        total: response.length,
+        inProgress: response.filter((p: Project) => p.status === "in_progress")
+          .length,
+        completed: response.filter((p: Project) => p.status === "completed")
+          .length,
+        pending: response.filter(
+          (p: Project) =>
+            p.status === "planning" || p.status === "pending_acceptance"
+        ).length,
+      });
     } catch (err) {
       console.error("Failed to load projects:", err);
     } finally {

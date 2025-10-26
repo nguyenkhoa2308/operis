@@ -2,10 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { AxiosError } from "axios";
 import { proposalsAPI, projectsAPI } from "@/lib/api";
 import ApprovalModal from "./ApprovalModal";
-import { Phase, Project, Proposal, TeamMember } from "@/types";
+import { ApiError, Phase, Project, Proposal, TeamMember } from "@/types";
 
 interface ProposalInlineProps {
   projectId: string;
@@ -152,7 +151,7 @@ export default function ProposalInline({
       console.log("🔵 ===== DATA LOAD COMPLETED =====");
       setLoading(false);
     } catch (err) {
-      const axiosErr = err as AxiosError<{ detail?: string }>;
+      const axiosErr = err as ApiError;
       console.error("❌ Failed to load data:", err);
       console.error(
         "❌ Error details:",
@@ -288,7 +287,7 @@ export default function ProposalInline({
             await loadData(); // Reload to get updated status
             console.log("✅ Data reloaded!");
           } catch (err) {
-            const axiosErr = err as AxiosError<{ detail?: string }>;
+            const axiosErr = err as ApiError;
             console.error("❌ Failed to accept proposal:", axiosErr);
             console.error("❌ Error response:", axiosErr.response?.data);
             alert(
@@ -369,7 +368,7 @@ export default function ProposalInline({
       );
       await loadData(); // Reload to get updated status
     } catch (err) {
-      const axiosErr = err as AxiosError<{ detail?: string; message?: string }>;
+      const axiosErr = err as ApiError;
       console.error("❌ Failed to submit payment:", err);
       console.error("❌ Error response:", axiosErr.response?.data);
       const errorMsg =
@@ -421,7 +420,7 @@ export default function ProposalInline({
       alert("Đã đánh dấu giai đoạn hoàn thành!");
       await loadData();
     } catch (err) {
-      const axiosErr = err as AxiosError<{ detail?: string }>;
+      const axiosErr = err as ApiError;
       const errorMsg = axiosErr.response?.data?.detail || axiosErr.message;
       alert("Lỗi: " + errorMsg);
     } finally {
@@ -453,7 +452,7 @@ export default function ProposalInline({
       );
       await loadData();
     } catch (err) {
-      const axiosErr = err as AxiosError<{ detail?: string }>;
+      const axiosErr = err as ApiError;
       const errorMsg = axiosErr.response?.data?.detail || axiosErr.message;
       alert("Lỗi: " + errorMsg);
     } finally {
@@ -468,7 +467,11 @@ export default function ProposalInline({
     ]);
   };
 
-  const updatePhase = (index: number, field: keyof Phase, value: string | number) => {
+  const updatePhase = (
+    index: number,
+    field: keyof Phase,
+    value: string | number
+  ) => {
     const newPhases = [...phases];
     newPhases[index] = { ...newPhases[index], [field]: value };
     setPhases(newPhases);
@@ -482,7 +485,11 @@ export default function ProposalInline({
     setTeamMembers([...teamMembers, { name: "", role: "", rating: 0 }]);
   };
 
-  const updateTeamMember = (index: number, field: keyof TeamMember, value: string | number) => {
+  const updateTeamMember = (
+    index: number,
+    field: keyof TeamMember,
+    value: string | number
+  ) => {
     const newMembers = [...teamMembers];
     newMembers[index] = { ...newMembers[index], [field]: value };
     setTeamMembers(newMembers);
@@ -496,7 +503,11 @@ export default function ProposalInline({
     setDeliverables([...deliverables, { description: "", penalty: "" }]);
   };
 
-  const updateDeliverable = (index: number, field: keyof Proposal["deliverables"][number], value: string) => {
+  const updateDeliverable = (
+    index: number,
+    field: keyof Proposal["deliverables"][number],
+    value: string
+  ) => {
     const newDeliverables = [...deliverables];
     newDeliverables[index] = { ...newDeliverables[index], [field]: value };
     setDeliverables(newDeliverables);

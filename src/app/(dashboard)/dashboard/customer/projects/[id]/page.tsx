@@ -6,27 +6,20 @@ import { projectsAPI } from "@/lib/api";
 import ProjectInfoCompact from "@/components/projects/ProjectInfoCompact";
 import ChatBoxCompact from "@/components/projects/ChatBoxCompact";
 import ProposalInline from "@/components/projects/ProposalInline";
-import { AxiosError } from "axios";
-import { Project } from "@/types";
+import { ApiError, Project } from "@/types";
+import { useAuthStore } from "@/stores/auth.store";
 
 export default function ProjectDetailPage() {
   const params = useParams();
   const router = useRouter();
   const projectId = params.id as string;
+  const userId = useAuthStore((state) => state.userId);
 
   const [project, setProject] = useState<Project | null>(null);
-  const [currentUserId, setCurrentUserId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    // Get current user from localStorage
-    const userStr = localStorage.getItem("user");
-    if (userStr) {
-      const user = JSON.parse(userStr);
-      setCurrentUserId(user.id);
-    }
-
     loadProject();
   }, [projectId]);
 
@@ -36,7 +29,7 @@ export default function ProjectDetailPage() {
       setProject(response.data);
       setLoading(false);
     } catch (err) {
-      const axiosErr = err as AxiosError<{ detail?: string }>;
+      const axiosErr = err as ApiError;
       console.error("Failed to load project:", axiosErr);
       setError(
         axiosErr.response?.data?.detail || "Không thể tải thông tin dự án"
@@ -194,7 +187,7 @@ export default function ProjectDetailPage() {
 
       {/* Chat Box */}
       <div className="bg-white rounded-2xl shadow-lg">
-        <ChatBoxCompact projectId={projectId} currentUserId={currentUserId} />
+        <ChatBoxCompact projectId={projectId} currentUserId={userId?.toString() || ""} />
       </div>
     </div>
   );

@@ -33,6 +33,7 @@ export interface AuthState {
   refreshAccessToken: () => Promise<boolean>;
   logout: () => void;
   updateProfile: (updates: Partial<UserProfile>) => void;
+  hydrate: () => void;
 }
 
 export interface AuthConfig {

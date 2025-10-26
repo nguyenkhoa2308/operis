@@ -8,6 +8,7 @@ import {
   BarChart3,
   Briefcase,
   MessageSquare,
+  HelpCircle,
 } from "lucide-react";
 
 export const getAllMenuItems = (role?: string) => {
@@ -77,7 +78,7 @@ export const getAllMenuItems = (role?: string) => {
           href: "/dashboard/customer/projects",
         },
         {
-          icon: MessageSquare,
+          icon: HelpCircle,
           label: "Hỗ trợ",
           href: "/dashboard/customer/support",
         },

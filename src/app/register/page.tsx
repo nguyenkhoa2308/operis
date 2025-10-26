@@ -31,15 +31,15 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { useAuthStore } from "@/stores/auth.store";
+// import { useAuthStore } from "@/stores/auth.store";
 import { authAPI } from "@/lib/api";
-import { useAuthConfig } from "@/hooks/useAuthConfig";
+// import { useAuthConfig } from "@/hooks/useAuthConfig";
 
 dayjs.locale("vi");
 
 function RegisterPageContent() {
   const router = useRouter();
-  const { loginWithGoogle } = useAuthStore();
+  // const { loginWithGoogle } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -48,7 +48,7 @@ function RegisterPageContent() {
     email: "",
     phone: "",
     full_name: "",
-    company: "",
+    // company: "",
     password: "",
     confirmPassword: "",
   });
@@ -146,9 +146,9 @@ function RegisterPageContent() {
         email: formData.email,
         password: formData.password,
         full_name: formData.full_name,
-        company: formData.company,
-        phone_number: formData.phone,
-        role: "CUSTOMER",
+        // company: formData.company,
+        phone: formData.phone,
+        role: "customer",
       });
 
       // Show success toast
@@ -172,7 +172,7 @@ function RegisterPageContent() {
         full_name: "",
         email: "",
         phone: "",
-        company: "",
+        // company: "",
         password: "",
         confirmPassword: "",
       });
@@ -382,7 +382,7 @@ function RegisterPageContent() {
                         <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <Input
                           id="fullName"
-                          name="fullName"
+                          name="full_name"
                           type="text"
                           value={formData.full_name}
                           onChange={handleChange}
@@ -437,7 +437,7 @@ function RegisterPageContent() {
                       </div>
                     </div>
 
-                    <div className="space-y-2">
+                    {/* <div className="space-y-2">
                       <Label
                         htmlFor="phone"
                         className="text-gray-700 font-medium"
@@ -457,7 +457,7 @@ function RegisterPageContent() {
                           required
                         />
                       </div>
-                    </div>
+                    </div> */}
 
                     <div className="space-y-2">
                       <Label

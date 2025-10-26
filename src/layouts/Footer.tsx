@@ -27,7 +27,7 @@ export default function Footer() {
                 <Bot className="w-7 h-7 text-white" />
               </div>
               <span className="ml-3 text-2xl font-bold bg-gradient-to-r from-[#3DDAB4] to-[#7A77FF] bg-clip-text text-transparent">
-                ToGoGo
+                Operis
               </span>
             </div>
             <p className="text-gray-400 mb-6 leading-relaxed">

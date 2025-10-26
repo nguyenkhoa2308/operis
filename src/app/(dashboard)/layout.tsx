@@ -1,8 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { UserProfile } from "@/types";
 import DashboardHeader from "./layout/DashboardHeader";
 import DashboardSidebar from "./layout/DashboardSidebar";
 import { useAuthStore } from "@/stores/auth.store";
@@ -12,10 +10,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const router = useRouter();
-  // const [user, setUser] = useState<UserProfile | null>(null);
   const { user } = useAuthStore();
-  console.log("user", user);
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -32,20 +27,6 @@ export default function DashboardLayout({
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
-  // useEffect(() => {
-  //   // Check if user is logged in
-  //   const token =
-  //     localStorage.getItem("access_token") || localStorage.getItem("token");
-  //   const userData = localStorage.getItem("user");
-
-  //   if (!token || !userData) {
-  //     router.push("/login");
-  //     return;
-  //   }
-
-  //   setUser(JSON.parse(userData));
-  // }, [router]);
 
   if (!user) {
     return (

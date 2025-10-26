@@ -6,6 +6,7 @@ import { projectsAPI } from "@/lib/api";
 import ChatBoxCompact from "@/components/projects/ChatBoxCompact";
 import ProposalInline from "@/components/projects/ProposalInline";
 import { Project, Proposal } from "@/types";
+import { getCookie } from "@/lib/utils";
 
 export default function SalesProjectDetailPage() {
   const params = useParams();
@@ -19,7 +20,7 @@ export default function SalesProjectDetailPage() {
   useEffect(() => {
     loadProject();
     // Get current user ID from localStorage
-    const token = localStorage.getItem("access_token");
+    const token = getCookie("access_token");
     if (token) {
       // Decode JWT to get user ID (simple base64 decode)
       try {

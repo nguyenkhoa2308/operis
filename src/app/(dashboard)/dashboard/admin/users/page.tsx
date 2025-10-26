@@ -1,8 +1,32 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { authAPI, userAPI } from "@/lib/api";
+import {
+  Users,
+  UserPlus,
+  Edit,
+  Trash2,
+  Mail,
+  Shield,
+  Calendar,
+  CheckCircle,
+  XCircle,
+  Search,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { toast } from "sonner";
 import { User } from "@/types";
+import { authAPI, userAPI } from "@/lib/api";
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -10,6 +34,7 @@ export default function AdminUsersPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Create user form
   const [createForm, setCreateForm] = useState({
@@ -30,12 +55,27 @@ export default function AdminUsersPage() {
     loadUsers();
   }, []);
 
+  // Lock scroll when modal is open
+  useEffect(() => {
+    if (showCreateModal || showEditModal) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+
+    // Cleanup
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [showCreateModal, showEditModal]);
+
   const loadUsers = async () => {
     try {
       const user = await userAPI.list({ page: 1, page_size: 100 });
       setUsers(user.data);
     } catch (err) {
       console.error("Failed to load users:", err);
+      toast.error("Không thể tải danh sách người dùng");
     } finally {
       setLoading(false);
     }
@@ -43,13 +83,13 @@ export default function AdminUsersPage() {
 
   const handleCreateUser = async () => {
     if (!createForm.email || !createForm.password || !createForm.full_name) {
-      alert("⚠️ Vui lòng điền đầy đủ thông tin");
+      toast.error("Vui lòng điền đầy đủ thông tin");
       return;
     }
 
     try {
       await authAPI.register(createForm);
-      alert("✅ Tạo người dùng thành công");
+      toast.success("Tạo người dùng thành công");
       setShowCreateModal(false);
       setCreateForm({
         email: "",
@@ -60,46 +100,25 @@ export default function AdminUsersPage() {
       loadUsers();
     } catch (err) {
       console.error("Failed to create user:", err);
-      alert("❌ Lỗi kết nối server");
+      toast.error("Lỗi khi tạo người dùng");
     }
   };
 
   const handleEditUser = async () => {
     if (!selectedUser || !editForm.full_name) {
-      alert("⚠️ Vui lòng điền đầy đủ thông tin");
+      toast.error("Vui lòng điền đầy đủ thông tin");
       return;
     }
 
     try {
-      // const response = await fetch(
-      //   `${process.env.NEXT_PUBLIC_API_URL}/api/users/${selectedUser.id}`,
-      //   {
-      //     method: "PUT",
-      //     headers: {
-      //       Authorization: `Bearer ${localStorage.getItem("token")}`,
-      //       "Content-Type": "application/json",
-      //     },
-      //     body: JSON.stringify(editForm),
-      //   }
-      // );
-      // if (response.ok) {
-      //   alert("✅ Cập nhật người dùng thành công");
-      //   setShowEditModal(false);
-      //   setSelectedUser(null);
-      //   loadUsers();
-      // } else {
-      //   const error = await response.json();
-      //   alert(`❌ Lỗi: ${error.detail || "Không thể cập nhật người dùng"}`);
-      // }
-
       await userAPI.update(selectedUser.id, editForm);
-      alert("✅ Cập nhật người dùng thành công");
+      toast.success("Cập nhật người dùng thành công");
       setShowEditModal(false);
       setSelectedUser(null);
       loadUsers();
     } catch (err) {
       console.error("Failed to update user:", err);
-      alert("❌ Lỗi kết nối server");
+      toast.error("Lỗi khi cập nhật người dùng");
     }
   };
 
@@ -107,28 +126,12 @@ export default function AdminUsersPage() {
     if (!confirm(`Bạn có chắc muốn xóa người dùng "${userName}"?`)) return;
 
     try {
-      // const response = await fetch(
-      //   `${process.env.NEXT_PUBLIC_API_URL}/api/users/${userId}`,
-      //   {
-      //     method: "DELETE",
-      //     headers: {
-      //       Authorization: `Bearer ${localStorage.getItem("token")}`,
-      //     },
-      //   }
-      // );
-      // if (response.ok) {
-      //   alert("✅ Xóa người dùng thành công");
-      //   loadUsers();
-      // } else {
-      //   const error = await response.json();
-      //   alert(`❌ Lỗi: ${error.detail || "Không thể xóa người dùng"}`);
-      // }
       await userAPI.delete(userId);
-      alert("✅ Xóa người dùng thành công");
+      toast.success("Xóa người dùng thành công");
       loadUsers();
     } catch (err) {
       console.error("Failed to delete user:", err);
-      alert("❌ Lỗi kết nối server");
+      toast.error("Lỗi khi xóa người dùng");
     }
   };
 
@@ -144,12 +147,18 @@ export default function AdminUsersPage() {
 
   const getRoleBadge = (role: string) => {
     const styles = {
-      admin: "bg-red-100 text-red-800",
-      sales: "bg-blue-100 text-blue-800",
-      dev: "bg-green-100 text-green-800",
-      customer: "bg-purple-100 text-purple-800",
+      admin:
+        "bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-200 text-red-700",
+      sales:
+        "bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 text-blue-700",
+      dev: "bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 text-green-700",
+      customer:
+        "bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 text-purple-700",
     };
-    return styles[role as keyof typeof styles] || "bg-gray-100 text-gray-800";
+    return (
+      styles[role as keyof typeof styles] ||
+      "bg-gray-50 border-2 border-gray-200 text-gray-700"
+    );
   };
 
   const getRoleLabel = (role: string) => {
@@ -163,117 +172,194 @@ export default function AdminUsersPage() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("vi-VN");
+    return new Date(dateString).toLocaleDateString("vi-VN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
   };
+
+  const filteredUsers = users.filter(
+    (user) =>
+      user.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="relative">
+          <div className="w-16 h-16 border-4 border-blue-200 rounded-full"></div>
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-gray-50">
-      <div>
-        {/* Header */}
-        <div className="mb-8 flex items-center justify-between">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
+      <div className="p-8">
+        {/* Header Section */}
+        <div className="mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Quản Lý Người Dùng
-            </h1>
-            <p className="text-gray-600">Tổng số: {users.length} người dùng</p>
+            <div className="flex items-start justify-between mb-6">
+              <div className="flex items-start gap-6">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                  <Users className="w-8 h-8 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+                    Quản lý Người dùng
+                  </h1>
+                  <p className="text-gray-600">
+                    Tổng số:{" "}
+                    <span className="font-bold text-blue-600">
+                      {filteredUsers.length}
+                    </span>{" "}
+                    người dùng
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={() => setShowCreateModal(true)}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all hover:scale-105"
+              >
+                <UserPlus className="w-4 h-4 mr-2" />
+                Thêm người dùng
+              </Button>
+            </div>
+
+            {/* Search Bar */}
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Input
+                type="text"
+                placeholder="Tìm kiếm theo tên hoặc email..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-12 py-6 border-2 focus:border-blue-500 transition-colors bg-white/50"
+              />
+            </div>
           </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-          >
-            + Thêm Người Dùng
-          </button>
         </div>
 
         {/* Users Table */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full border border-gray-200 rounded-lg">
-              <thead className="bg-gray-50 border-b">
-                <tr>
-                  <th className="text-left py-4 px-4 font-semibold text-gray-600">
-                    Tên
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gradient-to-r from-gray-50 to-gray-100/50 border-b-2 border-gray-200">
+                  <th className="text-left py-5 px-6 font-bold text-gray-700">
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4" />
+                      Tên
+                    </div>
                   </th>
-                  <th className="text-left py-4 px-4 font-semibold text-gray-600">
-                    Email
+                  <th className="text-left py-5 px-6 font-bold text-gray-700">
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-4 h-4" />
+                      Email
+                    </div>
                   </th>
-                  <th className="text-left py-4 px-4 font-semibold text-gray-600">
-                    Vai trò
+                  <th className="text-left py-5 px-6 font-bold text-gray-700">
+                    <div className="flex items-center gap-2">
+                      <Shield className="w-4 h-4" />
+                      Vai trò
+                    </div>
                   </th>
-                  <th className="text-left py-4 px-4 font-semibold text-gray-600">
-                    Trạng thái
+                  <th className="text-left py-5 px-6 font-bold text-gray-700">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4" />
+                      Trạng thái
+                    </div>
                   </th>
-                  <th className="text-left py-4 px-4 font-semibold text-gray-600">
-                    Ngày tạo
+                  <th className="text-left py-5 px-6 font-bold text-gray-700">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4" />
+                      Ngày tạo
+                    </div>
                   </th>
-                  <th className="text-center py-4 px-4 font-semibold text-gray-600">
+                  <th className="text-center py-5 px-6 font-bold text-gray-700">
                     Thao tác
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {users.length === 0 ? (
+                {filteredUsers.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="text-center py-8 text-gray-500">
-                      Không có người dùng nào
+                    <td colSpan={6} className="text-center py-12">
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                          <Users className="w-8 h-8 text-gray-400" />
+                        </div>
+                        <p className="text-gray-500">
+                          Không tìm thấy người dùng nào
+                        </p>
+                      </div>
                     </td>
                   </tr>
                 ) : (
-                  users.map((user) => (
-                    <tr key={user.id} className="border-b hover:bg-gray-50">
-                      <td className="py-4 px-4 font-medium text-gray-900">
-                        {user.full_name}
+                  filteredUsers.map((user, index) => (
+                    <tr
+                      key={user.id}
+                      className="border-b border-gray-100 hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-purple-50/50 transition-all group"
+                    >
+                      <td className="py-5 px-6">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center text-white">
+                            {user.full_name.charAt(0).toUpperCase()}
+                          </div>
+                          <span className="font-bold text-gray-900">
+                            {user.full_name}
+                          </span>
+                        </div>
                       </td>
-                      <td className="py-4 px-4 text-gray-600">{user.email}</td>
-                      <td className="py-4 px-4">
+                      <td className="py-5 px-6 text-gray-600">{user.email}</td>
+                      <td className="py-5 px-6">
                         <span
-                          className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${getRoleBadge(
+                          className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold ${getRoleBadge(
                             user.role
                           )}`}
                         >
                           {getRoleLabel(user.role)}
                         </span>
                       </td>
-                      <td className="py-4 px-4">
+                      <td className="py-5 px-6">
                         {user.is_active ? (
-                          <span className="inline-flex items-center px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
-                            <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                          <span className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 text-green-700 rounded-xl text-sm font-bold">
+                            <CheckCircle className="w-4 h-4" />
                             Hoạt động
                           </span>
                         ) : (
-                          <span className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm font-semibold">
-                            <span className="w-2 h-2 bg-gray-500 rounded-full mr-2"></span>
-                            Ngừng hoạt động
+                          <span className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-gray-50 to-slate-50 border-2 border-gray-200 text-gray-700 rounded-xl text-sm font-bold">
+                            <XCircle className="w-4 h-4" />
+                            Ngừng
                           </span>
                         )}
                       </td>
-                      <td className="py-4 px-4 text-gray-600">
+                      <td className="py-5 px-6 text-gray-600">
                         {formatDate(user.created_at)}
                       </td>
-                      <td className="py-4 px-4">
-                        <div className="flex items-center justify-center gap-2">
-                          <button
+                      <td className="py-5 px-6">
+                        <div className="flex items-center justify-center gap-2 transition-all">
+                          <Button
                             onClick={() => openEditModal(user)}
-                            className="px-3 py-1 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700"
+                            size="sm"
+                            className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white shadow-lg hover:shadow-xl transition-all hover:scale-105"
                           >
+                            <Edit className="w-3 h-3 mr-1" />
                             Sửa
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             onClick={() =>
                               handleDeleteUser(user.id, user.full_name)
                             }
-                            className="px-3 py-1 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700"
+                            size="sm"
+                            className="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transition-all hover:scale-105"
                           >
+                            <Trash2 className="w-3 h-3 mr-1" />
                             Xóa
-                          </button>
+                          </Button>
                         </div>
                       </td>
                     </tr>
@@ -287,91 +373,129 @@ export default function AdminUsersPage() {
 
       {/* Create User Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-2xl p-8 max-w-2xl w-full">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
-              Thêm Người Dùng Mới
-            </h2>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email *
-                </label>
-                <input
-                  type="email"
-                  value={createForm.email}
-                  onChange={(e) =>
-                    setCreateForm({ ...createForm, email: e.target.value })
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="user@example.com"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Mật khẩu *
-                </label>
-                <input
-                  type="password"
-                  value={createForm.password}
-                  onChange={(e) =>
-                    setCreateForm({ ...createForm, password: e.target.value })
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="••••••••"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Họ và tên *
-                </label>
-                <input
-                  type="text"
-                  value={createForm.full_name}
-                  onChange={(e) =>
-                    setCreateForm({ ...createForm, full_name: e.target.value })
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="Nguyễn Văn A"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Vai trò *
-                </label>
-                <select
-                  value={createForm.role}
-                  onChange={(e) =>
-                    setCreateForm({ ...createForm, role: e.target.value })
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  title="Chọn vai trò của người dùng"
-                >
-                  <option value="customer">Khách hàng</option>
-                  <option value="sales">Nhân viên bán hàng</option>
-                  <option value="dev">Lập trình viên</option>
-                  <option value="admin">Quản trị viên</option>
-                </select>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-300">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-8 rounded-t-3xl">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                  <UserPlus className="w-7 h-7 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-3xl font-bold text-white mb-1">
+                    Thêm người dùng mới
+                  </h2>
+                  <p className="text-blue-100">
+                    Tạo tài khoản người dùng mới trong hệ thống
+                  </p>
+                </div>
               </div>
             </div>
 
-            <div className="flex gap-4 mt-6">
-              <button
-                onClick={handleCreateUser}
-                className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-              >
-                Tạo Người Dùng
-              </button>
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
-              >
-                Hủy
-              </button>
+            {/* Modal Content */}
+            <div className="p-8">
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="create-email"
+                    className="text-sm font-bold text-gray-700"
+                  >
+                    Email <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="create-email"
+                    type="email"
+                    value={createForm.email}
+                    onChange={(e) =>
+                      setCreateForm({ ...createForm, email: e.target.value })
+                    }
+                    className="border-2 focus:border-blue-500 transition-colors"
+                    placeholder="user@example.com"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="create-password"
+                    className="text-sm font-bold text-gray-700"
+                  >
+                    Mật khẩu <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="create-password"
+                    type="password"
+                    value={createForm.password}
+                    onChange={(e) =>
+                      setCreateForm({ ...createForm, password: e.target.value })
+                    }
+                    className="border-2 focus:border-blue-500 transition-colors"
+                    placeholder="••••••••"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="create-name"
+                    className="text-sm font-bold text-gray-700"
+                  >
+                    Họ và tên <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="create-name"
+                    type="text"
+                    value={createForm.full_name}
+                    onChange={(e) =>
+                      setCreateForm({
+                        ...createForm,
+                        full_name: e.target.value,
+                      })
+                    }
+                    className="border-2 focus:border-blue-500 transition-colors"
+                    placeholder="Nguyễn Văn A"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="create-role"
+                    className="text-sm font-bold text-gray-700"
+                  >
+                    Vai trò <span className="text-red-500">*</span>
+                  </Label>
+                  <Select
+                    value={createForm.role}
+                    onValueChange={(value) =>
+                      setCreateForm({ ...createForm, role: value })
+                    }
+                  >
+                    <SelectTrigger className="border-2 focus:border-blue-500 transition-colors">
+                      <SelectValue placeholder="Chọn vai trò" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="customer">Khách hàng</SelectItem>
+                      <SelectItem value="sales">Nhân viên bán hàng</SelectItem>
+                      <SelectItem value="dev">Lập trình viên</SelectItem>
+                      <SelectItem value="admin">Quản trị viên</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="flex gap-4 mt-8">
+                <Button
+                  onClick={handleCreateUser}
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all hover:scale-105 py-6"
+                >
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Tạo người dùng
+                </Button>
+                <Button
+                  onClick={() => setShowCreateModal(false)}
+                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 shadow-lg hover:shadow-xl transition-all py-6"
+                >
+                  Hủy
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -379,93 +503,132 @@ export default function AdminUsersPage() {
 
       {/* Edit User Modal */}
       {showEditModal && selectedUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-2xl p-8 max-w-2xl w-full">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
-              Chỉnh Sửa Người Dùng
-            </h2>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={selectedUser.email}
-                  disabled
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500"
-                  title="Nhập email"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Email không thể thay đổi
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Họ và tên *
-                </label>
-                <input
-                  type="text"
-                  value={editForm.full_name}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, full_name: e.target.value })
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  title="Nhập họ và tên"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Vai trò *
-                </label>
-                <select
-                  value={editForm.role}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, role: e.target.value })
-                  }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  title="Chọn vai trò của người dùng"
-                >
-                  <option value="customer">Khách hàng</option>
-                  <option value="sales">Nhân viên bán hàng</option>
-                  <option value="dev">Lập trình viên</option>
-                  <option value="admin">Quản trị viên</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={editForm.is_active}
-                    onChange={(e) =>
-                      setEditForm({ ...editForm, is_active: e.target.checked })
-                    }
-                    className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                  />
-                  <span className="ml-2 text-sm font-medium text-gray-700">
-                    Tài khoản đang hoạt động
-                  </span>
-                </label>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-300">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-blue-600 to-cyan-600 p-8 rounded-t-3xl">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                  <Edit className="w-7 h-7 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-3xl font-bold text-white mb-1">
+                    Chỉnh sửa người dùng
+                  </h2>
+                  <p className="text-blue-100">Cập nhật thông tin tài khoản</p>
+                </div>
               </div>
             </div>
 
-            <div className="flex gap-4 mt-6">
-              <button
-                onClick={handleEditUser}
-                className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-              >
-                Cập Nhật
-              </button>
-              <button
-                onClick={() => setShowEditModal(false)}
-                className="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
-              >
-                Hủy
-              </button>
+            {/* Modal Content */}
+            <div className="p-8">
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="edit-email"
+                    className="text-sm font-bold text-gray-700"
+                  >
+                    Email
+                  </Label>
+                  <Input
+                    id="edit-email"
+                    type="email"
+                    value={selectedUser.email}
+                    disabled
+                    className="border-2 bg-gray-50 text-gray-500"
+                  />
+                  <p className="text-xs text-gray-500">
+                    Email không thể thay đổi
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="edit-name"
+                    className="text-sm font-bold text-gray-700"
+                  >
+                    Họ và tên <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="edit-name"
+                    type="text"
+                    value={editForm.full_name}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, full_name: e.target.value })
+                    }
+                    className="border-2 focus:border-blue-500 transition-colors"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="edit-role"
+                    className="text-sm font-bold text-gray-700"
+                  >
+                    Vai trò <span className="text-red-500">*</span>
+                  </Label>
+                  <Select
+                    value={editForm.role}
+                    onValueChange={(value) =>
+                      setEditForm({ ...editForm, role: value })
+                    }
+                  >
+                    <SelectTrigger className="border-2 focus:border-blue-500 transition-colors">
+                      <SelectValue placeholder="Chọn vai trò" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="customer">Khách hàng</SelectItem>
+                      <SelectItem value="sales">Nhân viên bán hàng</SelectItem>
+                      <SelectItem value="dev">Lập trình viên</SelectItem>
+                      <SelectItem value="admin">Quản trị viên</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      <div>
+                        <Label
+                          htmlFor="edit-active"
+                          className="cursor-pointer font-bold text-gray-700"
+                        >
+                          Trạng thái tài khoản
+                        </Label>
+                        <p className="text-xs text-gray-600 mt-1">
+                          {editForm.is_active
+                            ? "Tài khoản đang hoạt động"
+                            : "Tài khoản đã bị vô hiệu hóa"}
+                        </p>
+                      </div>
+                    </div>
+                    <Switch
+                      id="edit-active"
+                      checked={editForm.is_active}
+                      onCheckedChange={(checked) =>
+                        setEditForm({ ...editForm, is_active: checked })
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-4 mt-8">
+                <Button
+                  onClick={handleEditUser}
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white shadow-lg hover:shadow-xl transition-all hover:scale-105 py-6"
+                >
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Cập nhật
+                </Button>
+                <Button
+                  onClick={() => setShowEditModal(false)}
+                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 shadow-lg hover:shadow-xl transition-all py-6"
+                >
+                  Hủy
+                </Button>
+              </div>
             </div>
           </div>
         </div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { getCookie } from "@/lib/utils";
 import {
   MessageSquare,
   Send,
@@ -12,7 +13,7 @@ import {
   Paperclip,
 } from "lucide-react";
 import Link from "next/link";
-import { projectsAPI } from "@/lib/api";
+import { authAPI, projectsAPI, userAPI } from "@/lib/api";
 import { Message, Project, User } from "@/types";
 
 export default function ProjectChatPage() {
@@ -46,35 +47,17 @@ export default function ProjectChatPage() {
 
   const loadProjectAndMessages = async () => {
     try {
-      const token =
-        localStorage.getItem("token") || localStorage.getItem("access_token");
+      const token = getCookie("access_token");
       if (!token) {
         router.push("/login");
         return;
       }
 
-      // Load user info
-      const userResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/auth/profile`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      if (userResponse.ok) {
-        const userData = await userResponse.json();
-        setCurrentUser(userData);
-      }
+      const userResponse = (await userAPI.getMe()).data;
+      setCurrentUser(userResponse);
 
-      // Load project
-      const projectResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/projects/${projectId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      if (projectResponse.ok) {
-        const projectData = await projectResponse.json();
-        setProject(projectData);
-      }
+      const projectResponse = (await projectsAPI.get(projectId)).data;
+      setProject(projectResponse);
 
       // Load messages
       await loadMessages();
@@ -87,32 +70,13 @@ export default function ProjectChatPage() {
 
   const loadMessages = async () => {
     try {
-      const token =
-        localStorage.getItem("token") || localStorage.getItem("access_token");
-      if (!token) return;
+      const response = (await projectsAPI.listMessages(projectId, 100)).data;
+      setMessages(response);
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/projects/${projectId}/messages?limit=100`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        setMessages(data);
-
-        // Mark messages as read by updating participant's last_read_at
-        // This is done by sending a message to mark them read
-        if (data.length > 0) {
-          const lastMessage = data[data.length - 1];
-          if (lastMessage.sender.id !== currentUser?.id) {
-            await fetch(
-              `${process.env.NEXT_PUBLIC_API_URL}/api/projects/${projectId}/messages/${lastMessage.id}/read`,
-              {
-                method: "POST",
-                headers: { Authorization: `Bearer ${token}` },
-              }
-            );
-          }
+      if (response.length > 0) {
+        const lastMessage = response[response.length - 1];
+        if (lastMessage.sender.id !== currentUser?.id) {
+          await projectsAPI.markMessageRead(projectId, lastMessage.id);
         }
       }
     } catch (err) {
@@ -126,30 +90,6 @@ export default function ProjectChatPage() {
 
     setSending(true);
     try {
-      // const token =
-      //   localStorage.getItem("token") || localStorage.getItem("access_token");
-      // if (!token) return;
-      // const response = await fetch(
-      //   `${process.env.NEXT_PUBLIC_API_URL}/api/projects/${projectId}/messages`,
-      //   {
-      //     method: "POST",
-      //     headers: {
-      //       Authorization: `Bearer ${token}`,
-      //       "Content-Type": "application/json",
-      //     },
-      //     body: JSON.stringify({
-      //       message: newMessage,
-      //       message_type: "text",
-      //       attachments: [],
-      //     }),
-      //   }
-      // );
-      // if (response.ok) {
-      //   const sentMessage = await response.json();
-      //   setMessages([...messages, sentMessage]);
-      //   setNewMessage("");
-      //   scrollToBottom();
-      // }
       const response = (
         await projectsAPI.sendMessage(projectId, {
           message: newMessage,

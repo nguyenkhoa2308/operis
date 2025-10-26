@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { projectsAPI } from "@/lib/api";
+import { getCookie } from "@/lib/utils";
 import {
   FiCheckCircle,
   FiStar,
@@ -14,8 +15,7 @@ import {
   FiAlertTriangle,
 } from "react-icons/fi";
 import { AiFillStar, AiOutlineStar } from "react-icons/ai";
-import { AxiosError } from "axios";
-import { Project } from "@/types";
+import { ApiError, Project } from "@/types";
 
 export default function ProjectHandoverPage() {
   const params = useParams();
@@ -67,13 +67,14 @@ export default function ProjectHandoverPage() {
     setSubmitting(true);
     try {
       // Submit feedback to API
+      const token = getCookie("access_token");
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/feedback/projects/${projectId}/feedback`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             rating: rating || null,
@@ -95,7 +96,7 @@ export default function ProjectHandoverPage() {
       );
       router.push(`/dashboard/customer/projects/${projectId}`);
     } catch (err) {
-      const axiosErr = err as AxiosError<{ message?: string }>;
+      const axiosErr = err as ApiError;
       alert(`❌ Lỗi: ${axiosErr.message}\nVui lòng thử lại.`);
     } finally {
       setSubmitting(false);

@@ -1,13 +1,10 @@
 import axios from "axios";
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 import { UserProfile, AuthState } from "@/types";
 import { authAPI, userAPI } from "@/lib/api";
-import { deleteCookie, setCookie } from "@/lib/utils";
+import { getCookie, setCookie, deleteCookie } from "@/lib/utils";
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set, get) => ({
+export const useAuthStore = create<AuthState>()((set, get) => ({
       access_token: null,
       refresh_token: null,
       user: null,
@@ -29,11 +26,12 @@ export const useAuthStore = create<AuthState>()(
           // Set axios default authorization header
           axios.defaults.headers.common.Authorization = `Bearer ${access_token}`;
 
-          // Step 2: Save tokens to both localStorage AND cookies
-          setCookie("access_token", access_token);
-          setCookie("refresh_token", refresh_token);
-          setCookie("user_role", user.role);
+          // Step 2: Save tokens and role to cookies
+          setCookie("access_token", access_token, 7);
+          setCookie("refresh_token", refresh_token, 7);
+          setCookie("user_role", user.role, 7);
 
+          // Step 3: Update store state
           set({
             access_token: access_token,
             refresh_token: refresh_token,
@@ -41,7 +39,7 @@ export const useAuthStore = create<AuthState>()(
             userId: user.id,
           });
 
-          // Step 3: Fetch user profile (kept in memory only)
+          // Step 4: Fetch user profile (kept in memory only)
           await get().fetchUserProfile();
 
           return { ok: true, role: user.role };
@@ -66,10 +64,12 @@ export const useAuthStore = create<AuthState>()(
           // Set axios default authorization header
           axios.defaults.headers.common.Authorization = `Bearer ${loginResponse.access_token}`;
 
-          // Step 2: Save tokens to both localStorage AND cookies
-          setCookie("access_token", loginResponse.access_token);
-          setCookie("refresh_token", loginResponse.refresh_token);
+          // Step 2: Save tokens and role to cookies
+          setCookie("access_token", loginResponse.access_token, 7);
+          setCookie("refresh_token", loginResponse.refresh_token, 7);
+          setCookie("user_role", loginResponse.user.role, 7);
 
+          // Step 3: Update store state
           set({
             access_token: loginResponse.access_token,
             refresh_token: loginResponse.refresh_token,
@@ -77,7 +77,7 @@ export const useAuthStore = create<AuthState>()(
             userId: loginResponse.user.id,
           });
 
-          // Step 3: Fetch user profile (kept in memory only)
+          // Step 4: Fetch user profile (kept in memory only)
           await get().fetchUserProfile();
 
           return true;
@@ -90,9 +90,9 @@ export const useAuthStore = create<AuthState>()(
       fetchUserProfile: async () => {
         try {
           set({ isInitializing: true });
-          const { userId, access_token } = get();
+          const { access_token } = get();
 
-          if (!userId || !access_token) {
+          if (!access_token) {
             console.error("❌ Không có access token");
             set({ isInitializing: false });
             return false;
@@ -106,7 +106,12 @@ export const useAuthStore = create<AuthState>()(
             return false;
           }
 
-          // Update only user data in memory (not persisted to localStorage)
+          // Update user_role cookie if not exists
+          if (!getCookie("user_role") && userProfile.role) {
+            setCookie("user_role", userProfile.role, 7);
+          }
+
+          // Update user data and userId in memory
           set({
             user: {
               id: userProfile.id,
@@ -121,6 +126,7 @@ export const useAuthStore = create<AuthState>()(
               phone_number: userProfile.phone || "",
               role: userProfile.role || "User",
             },
+            userId: parseInt(userProfile.id),
             isInitializing: false,
           });
 
@@ -155,19 +161,21 @@ export const useAuthStore = create<AuthState>()(
           console.log("🔄 Đang refresh access token...");
           const { data: response } = await authAPI.refresh(refresh_token);
 
-          // Update cookies
-          setCookie("access_token", response.access_token);
-          setCookie("refresh_token", response.refresh_token);
-          setCookie("user_role", response.user.role);
+          // Update tokens and role in cookies
+          setCookie("access_token", response.access_token, 7);
+          setCookie("refresh_token", response.refresh_token, 7);
+          if (response.user?.role) {
+            setCookie("user_role", response.user.role, 7);
+          }
 
-          // Update access token and refresh token
+          // Update store state
           set({
-            access_token: response.access,
-            refresh_token: response.refresh,
+            access_token: response.access_token,
+            refresh_token: response.refresh_token,
           });
 
           // Update axios default header
-          axios.defaults.headers.common.Authorization = `Bearer ${response.access}`;
+          axios.defaults.headers.common.Authorization = `Bearer ${response.access_token}`;
 
           console.log("✅ Refresh token thành công");
           return true;
@@ -185,11 +193,13 @@ export const useAuthStore = create<AuthState>()(
         deleteCookie("refresh_token");
         deleteCookie("user_role");
 
+        // Clear store state
         set({
           user: null,
           access_token: null,
           refresh_token: null,
           isLoggedIn: false,
+          userId: null,
         });
         delete axios.defaults.headers.common.Authorization;
       },
@@ -202,17 +212,26 @@ export const useAuthStore = create<AuthState>()(
           });
         }
       },
-    }),
-    {
-      name: "auth-storage",
-      // IMPORTANT: Only persist tokens, NOT user data
-      partialize: (state) => ({
-        access_token: state.access_token,
-        refresh_token: state.refresh_token,
-        isLoggedIn: state.isLoggedIn,
-        userId: state.userId,
-        // user is NOT persisted - will be fetched from API on page load
-      }),
-    }
-  )
-);
+
+      // Initialize state from cookies
+      hydrate: () => {
+        const access_token = getCookie("access_token");
+        const refresh_token = getCookie("refresh_token");
+
+        if (access_token && refresh_token) {
+          // Set axios default authorization header
+          axios.defaults.headers.common.Authorization = `Bearer ${access_token}`;
+
+          set({
+            access_token,
+            refresh_token,
+            isLoggedIn: true,
+          });
+
+          // Fetch user profile after hydrating tokens
+          get().fetchUserProfile();
+        } else {
+          set({ isInitializing: false });
+        }
+      },
+    }));

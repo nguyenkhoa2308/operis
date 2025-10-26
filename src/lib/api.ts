@@ -3,10 +3,76 @@
  * API client for backend communication
  */
 import axios from "axios";
-import { getCookie } from "./utils";
+import { getCookie, setCookie } from "./utils";
 
 // FORCE port 8001 to avoid conflict with background process on 8000
-const API_URL = "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+// Helper to decode JWT and check if it's expired
+function isTokenExpired(token: string): boolean {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    const exp = payload.exp * 1000; // Convert to milliseconds
+    // Check if token expires in less than 60 seconds
+    return Date.now() >= exp - 60000;
+  } catch (error) {
+    return true; // If we can't decode, assume expired
+  }
+}
+
+// Track if we're currently refreshing to avoid multiple refresh calls
+let isRefreshing = false;
+let refreshPromise: Promise<string> | null = null;
+
+// Function to refresh token
+async function refreshAccessToken(): Promise<string> {
+  if (isRefreshing && refreshPromise) {
+    return refreshPromise;
+  }
+
+  isRefreshing = true;
+  refreshPromise = (async () => {
+    try {
+      const refreshToken = getCookie("refresh_token");
+      if (!refreshToken) {
+        throw new Error("No refresh token");
+      }
+
+      const res = await axios.post(`${API_URL}/api/auth/refresh`, {
+        refresh_token: refreshToken,
+      });
+
+      const newAccess =
+        res.data.access_token || res.data.access || res.data.token;
+      const newRefresh =
+        res.data.refresh_token || res.data.refresh || res.data.new_refresh;
+
+      if (!newAccess) throw new Error("No access token in refresh response");
+
+      // Save new tokens
+      setCookie("access_token", newAccess, 7);
+      if (newRefresh) {
+        setCookie("refresh_token", newRefresh, 7);
+      }
+
+      return newAccess;
+    } catch (error) {
+      // Clear all cookies and redirect to login
+      document.cookie.split(";").forEach((c) => {
+        document.cookie = c
+          .replace(/^ +/, "")
+          .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+      });
+      window.location.href = "/login";
+      throw error;
+    } finally {
+      isRefreshing = false;
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
+}
 
 export const api = axios.create({
   baseURL: `${API_URL}/api`,
@@ -22,10 +88,22 @@ export const rawAPI = axios.create({
   },
 });
 
-// Request interceptor to add auth token
+// Request interceptor to add auth token and refresh if needed
 api.interceptors.request.use(
-  (config) => {
-    const token = getCookie("access_token");
+  async (config) => {
+    let token = getCookie("access_token");
+
+    // Check if token is expired or about to expire
+    if (token && isTokenExpired(token)) {
+      try {
+        // Refresh the token before making the request
+        token = await refreshAccessToken();
+      } catch (error) {
+        // If refresh fails, the refreshAccessToken function will handle redirect
+        return Promise.reject(error);
+      }
+    }
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -47,7 +125,15 @@ api.interceptors.response.use(
 
       const refreshToken = getCookie("refresh_token");
       if (!refreshToken) {
-        localStorage.clear();
+        // Clear all cookies and redirect to login
+        document.cookie.split(";").forEach((c) => {
+          document.cookie = c
+            .replace(/^ +/, "")
+            .replace(
+              /=.*/,
+              "=;expires=" + new Date().toUTCString() + ";path=/"
+            );
+        });
         window.location.href = "/login";
         return Promise.reject(error);
       }
@@ -64,9 +150,8 @@ api.interceptors.response.use(
 
         if (!newAccess) throw new Error("No access token in refresh response");
 
-        localStorage.setItem("access_token", newAccess);
-        if (newRefresh) localStorage.setItem("refresh_token", newRefresh);
-
+        // Tokens will be saved by Zustand store's refresh method
+        // Just update the request header
         originalRequest.headers = {
           ...originalRequest.headers,
           Authorization: `Bearer ${newAccess}`,
@@ -74,7 +159,15 @@ api.interceptors.response.use(
 
         return api(originalRequest);
       } catch (refreshError) {
-        localStorage.clear();
+        // Clear all cookies and redirect to login
+        document.cookie.split(";").forEach((c) => {
+          document.cookie = c
+            .replace(/^ +/, "")
+            .replace(
+              /=.*/,
+              "=;expires=" + new Date().toUTCString() + ";path=/"
+            );
+        });
         window.location.href = "/login";
         return Promise.reject(refreshError);
       }
@@ -249,4 +342,15 @@ export const feedbackAPI = {
   update: (feedbackId: string, data: any) =>
     api.put(`/feedback/${feedbackId}`, data),
   delete: (feedbackId: string) => api.delete(`/feedback/${feedbackId}`),
+};
+
+// Support API
+export const supportAPI = {
+  createTicket: (data: {
+    subject: string;
+    message: string;
+    priority?: string;
+  }) => api.post("/support/tickets", data),
+  listTickets: (params?: any) => api.get("/support/tickets", { params }),
+  getTicket: (id: string) => api.get(`/support/tickets/${id}`),
 };

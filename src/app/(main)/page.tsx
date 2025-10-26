@@ -1707,7 +1707,7 @@ export default function Home() {
 
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6 sm:mb-8 lg:mb-12 justify-center lg:justify-start">
                 <Link
-                  href={"/request"}
+                  href={"/login"}
                   className="w-full sm:w-auto sm:flex-1 lg:flex-none"
                 >
                   <motion.button
@@ -2211,7 +2211,7 @@ export default function Home() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <Link href="/request">
+                    <Link href="/login">
                       <button className="group relative overflow-hidden bg-gradient-to-r from-[#3DDAB4] to-[#7A77FF] text-white px-8 py-4 rounded-xl font-bold text-base shadow-lg hover:shadow-xl hover:shadow-[#3DDAB4]/30 transition-all duration-300">
                         <motion.div
                           className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
@@ -2239,109 +2239,6 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="pt-16 pb-20 relative overflow-hidden">
-        {/* Dot pattern background */}
-        <div
-          className="absolute inset-0 opacity-20"
-          style={{
-            backgroundImage: `radial-gradient(circle, #3DDAB4 1px, transparent 1px)`,
-            backgroundSize: "24px 24px",
-          }}
-        />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0, ease: "easeOut" }}
-          >
-            <div className="text-center">
-              <Badge className="mb-4 bg-gradient-to-r from-[#3DDAB4]/20 to-[#7A77FF]/20 text-[#7A77FF] border-[#7A77FF]/30 rounded-full px-4 py-2">
-                ⚡ Miễn phí tư vấn và báo giá
-              </Badge>
-              <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-                Mô tả{" "}
-                <span className="bg-gradient-to-r from-[#3DDAB4] to-[#7A77FF] bg-clip-text text-transparent">
-                  quy trình
-                </span>{" "}
-                cần tự động hóa
-              </h2>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                Chỉ cần 2 phút để mô tả. Chúng tôi sẽ phân tích và đưa ra giải
-                pháp phù hợp trong 24h.
-              </p>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Locked Form with Overlay */}
-        <div className="relative">
-          {/* Form content - slightly blurred */}
-          {/* <div className="filter blur-[2px] pointer-events-none select-none opacity-40"></div> */}
-          <RequestForm />
-
-          {/* Simple Lock Overlay */}
-          {/* <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="absolute inset-0 flex items-center justify-center bg-white/20"
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              whileInView={{ scale: 1, opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.5 }}
-              className="text-center bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-6 sm:p-8 mx-4 border border-gray-200"
-            >
-              <motion.div
-                animate={{
-                  y: [0, -5, 0],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-                className="mb-4"
-              >
-                <div className="w-16 h-16 mx-auto bg-gradient-to-br from-[#3DDAB4] to-[#7A77FF] rounded-full flex items-center justify-center">
-                  <svg
-                    className="w-8 h-8 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                    />
-                  </svg>
-                </div>
-              </motion.div>
-
-              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
-                Tính năng sắp ra mắt
-              </h3>
-
-              <p className="text-gray-600 mb-6">
-                Mở lại sau ngày{" "}
-                <span className="font-bold text-[#7A77FF]">17/10</span>
-              </p>
-
-              <Link href="/contact">
-                <Button className="bg-gradient-to-r from-[#3DDAB4] to-[#7A77FF] text-white hover:opacity-90 px-6 py-3 rounded-xl font-semibold">
-                  <Phone className="w-4 h-4 mr-2" />
-                  Liên hệ ngay
-                </Button>
-              </Link>
-            </motion.div>
-          </motion.div> */}
-        </div>
-      </section>
       {/* Problem Section */}
       <section className="py-20 bg-gray-50 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -3287,7 +3184,7 @@ export default function Home() {
 
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <Link
-                href={"/request"}
+                href={"/login"}
                 className="bg-white inline-flex items-center justify-center text-[#7A77FF] hover:bg-gray-100 text-xl px-12 py-4 font-bold rounded-2xl shadow-2xl hover:shadow-3xl transition-all duration-300"
               >
                 Gửi yêu cầu miễn phí

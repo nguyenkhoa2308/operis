@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { AxiosError } from "axios";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -21,7 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuthStore } from "@/stores/auth.store";
-import { WorkflowStep } from "@/types";
+import { ApiError, WorkflowStep } from "@/types";
 
 interface RequestFormProps {
   serviceId?: string;
@@ -206,7 +205,7 @@ export default function RequestForm({
         setWorkflows([{ id: "1", description: "" }]);
       }
     } catch (err) {
-      const axiosErr = err as AxiosError<{ detail?: string }>;
+      const axiosErr = err as ApiError;
       setError(
         axiosErr.response?.data?.detail ||
           axiosErr.message ||

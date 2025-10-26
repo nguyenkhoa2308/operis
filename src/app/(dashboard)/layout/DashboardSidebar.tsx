@@ -20,7 +20,7 @@ export default function DashboardSidebar({
   return (
     <aside
       className={cn(
-        "fixed left-0 top-16 bottom-0 bg-white/70 backdrop-blur-lg border-r border-gray-200/50 shadow-sm transition-all duration-300 overflow-hidden z-0",
+        "fixed left-0 top-16 bottom-0 bg-white/70 backdrop-blur-lg border-r border-gray-200/50 shadow-sm transition-all duration-300 overflow-hidden z-50",
         open ? "w-[280px]" : "w-0"
       )}
     >

@@ -10,17 +10,10 @@ import {
   Menu,
   X,
   Home,
-  FolderKanban,
-  Users,
-  Briefcase,
-  DollarSign,
-  BarChart3,
-  Package,
-  MessageSquare,
   ChevronDown,
   Search,
+  type LucideIcon,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
@@ -28,6 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuthStore } from "@/stores/auth.store";
+import { getAllMenuItems } from "@/lib/navigation";
 import Link from "next/link";
 
 interface DashboardHeaderProps {
@@ -38,6 +32,26 @@ interface DashboardHeaderProps {
   };
   isMobileMenuOpen: boolean;
   setIsMobileMenuOpen: (open: boolean) => void;
+}
+
+interface MenuItem {
+  icon: LucideIcon;
+  label: string;
+  href: string;
+  color?: string;
+}
+
+interface MenuItems {
+  commonItems: MenuItem[];
+  quickAccessItems: MenuItem[];
+  // profileItems: MenuItem[];
+}
+
+interface Notification {
+  id: number;
+  title: string;
+  time: string;
+  unread: boolean;
 }
 
 export default function DashboardHeader({
@@ -55,32 +69,46 @@ export default function DashboardHeader({
     router.push("/login");
   };
 
-  const getRoleColor = (role: string) => {
+  const getRoleColor = (role: string): string => {
     const colors: Record<string, string> = {
-      admin: "bg-red-100 text-red-800 border-red-300",
-      sale: "bg-blue-100 text-blue-800 border-blue-300",
-      sales: "bg-blue-100 text-blue-800 border-blue-300",
-      dev: "bg-green-100 text-green-800 border-green-300",
-      developer: "bg-green-100 text-green-800 border-green-300",
-      customer: "bg-purple-100 text-purple-800 border-purple-300",
+      admin: "bg-red-500/80 border-red-500",
+      sales: "bg-blue-500/80 border-blue-500",
+      dev: "bg-green-500/80 border-green-500",
+      customer: "bg-purple-500/80 border-purple-500",
     };
-    return colors[role] || "bg-gray-100 text-gray-800 border-gray-300";
+    return colors[role] || "bg-gray-500 text-gray-700 border-gray-500";
   };
 
-  const getRoleLabel = (role: string) => {
+  const getRoleLabel = (role: string): string => {
     const labels: Record<string, string> = {
       admin: "Quản trị viên",
-      sale: "Nhân viên kinh doanh",
       sales: "Nhân viên kinh doanh",
       dev: "Lập trình viên",
-      developer: "Lập trình viên",
       customer: "Khách hàng",
     };
     return labels[role] || role;
   };
 
+  // Get menu items from navigation - same as sidebar
+  const sidebarMenuItems = getAllMenuItems(user.role);
+
+  const menuItems: MenuItems = {
+    commonItems: [
+      { icon: Home, label: "Về trang chủ", href: "/", color: "text-blue-600" },
+    ],
+    quickAccessItems: sidebarMenuItems.map((item) => ({
+      icon: item.icon,
+      label: item.label,
+      href: item.href,
+    })),
+    // profileItems: [
+    //   { icon: User, label: "Thông tin cá nhân", href: "/dashboard/profile" },
+    //   { icon: Settings, label: "Cài đặt", href: "/dashboard/settings" },
+    // ],
+  };
+
   // Mock notifications
-  const notifications = [
+  const notifications: Notification[] = [
     { id: 1, title: "Dự án mới được tạo", time: "5 phút trước", unread: true },
     {
       id: 2,
@@ -132,20 +160,6 @@ export default function DashboardHeader({
               </div>
             </Link>
           </div>
-
-          {/* Desktop Navigation */}
-          {/* <nav className="hidden lg:flex items-center gap-1">
-            {navigationItems.map((item) => (
-              <button
-                key={item.href}
-                onClick={() => router.push(item.href)}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all font-medium"
-              >
-                <item.icon className="w-4 h-4" />
-                {item.label}
-              </button>
-            ))}
-          </nav> */}
 
           <div className="hidden md:flex items-center flex-1 max-w-md ml-4">
             <div className="relative w-full">
@@ -220,99 +234,12 @@ export default function DashboardHeader({
 
             {/* Profile Menu */}
             <div className="relative">
-              {/* <button
-                onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">
-                    {user.full_name.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-                <div className="hidden md:block text-left">
-                  <p className="text-sm font-semibold text-gray-900">
-                    {user.full_name}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {getRoleLabel(user.role)}
-                  </p>
-                </div>
-                <ChevronDown className="w-4 h-4 text-gray-600 hidden md:block" />
-              </button> */}
-
-              {/* Profile Dropdown */}
-              {/* <AnimatePresence>
-                {isProfileMenuOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border overflow-hidden"
-                  >
-                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                          <span className="text-white font-bold text-lg">
-                            {user.full_name.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                        <div>
-                          <p className="font-bold">{user.full_name}</p>
-                          <p className="text-sm text-white/80">{user.email}</p>
-                        </div>
-                      </div>
-                      <div className="mt-3">
-                        <span
-                          className={`inline-block px-3 py-1 rounded-full text-xs font-bold border ${getRoleColor(
-                            user.role
-                          )}`}
-                        >
-                          {getRoleLabel(user.role)}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="py-2">
-                      <button
-                        onClick={() => router.push("/dashboard/profile")}
-                        className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
-                      >
-                        <User className="w-4 h-4 text-gray-600" />
-                        <span className="text-sm text-gray-700">
-                          Thông tin cá nhân
-                        </span>
-                      </button>
-                      <button
-                        onClick={() => router.push("/dashboard/settings")}
-                        className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
-                      >
-                        <Settings className="w-4 h-4 text-gray-600" />
-                        <span className="text-sm text-gray-700">Cài đặt</span>
-                      </button>
-                    </div>
-
-                    <div className="border-t py-2">
-                      <button
-                        onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-4 py-2 hover:bg-red-50 transition-colors text-red-600"
-                      >
-                        <LogOut className="w-4 h-4" />
-                        <span className="text-sm font-semibold">Đăng xuất</span>
-                      </button>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence> */}
-
               <DropdownMenu
                 open={isProfileMenuOpen}
                 onOpenChange={setIsProfileMenuOpen}
               >
                 <DropdownMenuTrigger asChild>
-                  <button
-                    onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                    className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors outline-none"
-                  >
+                  <button className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors outline-none">
                     <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                       <span className="text-white font-bold text-sm">
                         {user.full_name.charAt(0).toUpperCase()}
@@ -333,98 +260,113 @@ export default function DashboardHeader({
                 <DropdownMenuContent
                   align="end"
                   sideOffset={8}
-                  className="w-64 p-0 overflow-hidden bg-white rounded-xl"
+                  className="w-72 p-0 overflow-hidden bg-white rounded-xl shadow-2xl border-0"
                 >
-                  <AnimatePresence>
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border overflow-hidden"
-                    >
-                      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                            <span className="text-white font-bold text-lg">
-                              {user.full_name.charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                          <div>
-                            <p className="font-bold">{user.full_name}</p>
-                            <p className="text-sm text-white/80">
-                              {user.email}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="mt-3">
-                          <span
-                            className={`inline-block px-3 py-1 rounded-full text-xs font-bold border ${getRoleColor(
-                              user.role
-                            )}`}
-                          >
-                            {getRoleLabel(user.role)}
-                          </span>
-                        </div>
+                  <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                        <span className="text-white font-bold text-lg">
+                          {user.full_name.charAt(0).toUpperCase()}
+                        </span>
                       </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold truncate">{user.full_name}</p>
+                        <p className="text-sm text-white/80 truncate">
+                          {user.email}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="mt-3">
+                      <span
+                        className={`inline-flex items-center px-3 py-1.5 rounded-lg text-[13px] font-semibold border ${getRoleColor(
+                          user.role
+                        )}`}
+                      >
+                        {getRoleLabel(user.role)}
+                      </span>
+                    </div>
+                  </div>
 
-                      <div className="py-2">
+                  {/* Quick Actions */}
+                  {menuItems.commonItems.length > 0 && (
+                    <div className="py-2 border-b">
+                      {menuItems.commonItems.map((item, index) => (
                         <button
-                          onClick={() => router.push("/dashboard/profile")}
-                          className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
+                          key={index}
+                          onClick={() => {
+                            router.push(item.href);
+                            setIsProfileMenuOpen(false);
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-blue-50 transition-colors group"
                         >
-                          <User className="w-4 h-4 text-gray-600" />
+                          <item.icon
+                            className={`w-5 h-5 ${
+                              item.color || "text-gray-600"
+                            } group-hover:scale-110 transition-transform`}
+                          />
+                          <span className="text-sm text-gray-700 font-medium">
+                            {item.label}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Quick access items */}
+                  {menuItems.quickAccessItems.length > 0 && (
+                    <div className="py-2 border-b">
+                      {menuItems.quickAccessItems.map((item, index) => (
+                        <button
+                          key={index}
+                          onClick={() => {
+                            router.push(item.href);
+                            setIsProfileMenuOpen(false);
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors group"
+                        >
+                          <item.icon className="w-4 h-4 text-gray-600 group-hover:text-blue-600 transition-colors" />
                           <span className="text-sm text-gray-700">
-                            Thông tin cá nhân
+                            {item.label}
                           </span>
                         </button>
-                        <button
-                          onClick={() => router.push("/dashboard/settings")}
-                          className="w-full flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
-                        >
-                          <Settings className="w-4 h-4 text-gray-600" />
-                          <span className="text-sm text-gray-700">Cài đặt</span>
-                        </button>
-                      </div>
+                      ))}
+                    </div>
+                  )}
 
-                      <div className="border-t py-2">
-                        <button
-                          onClick={handleLogout}
-                          className="w-full flex items-center gap-3 px-4 py-2 hover:bg-red-50 transition-colors text-red-600"
-                        >
-                          <LogOut className="w-4 h-4" />
-                          <span className="text-sm font-semibold">
-                            Đăng xuất
-                          </span>
-                        </button>
-                      </div>
-                    </motion.div>
-                  </AnimatePresence>
+                  {/* Profile items */}
+                  {/* <div className="py-2 border-b">
+                    {menuItems.profileItems.map((item, index) => (
+                      <button
+                        key={index}
+                        onClick={() => {
+                          router.push(item.href);
+                          setIsProfileMenuOpen(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors group"
+                      >
+                        <item.icon className="w-4 h-4 text-gray-600 group-hover:text-blue-600 transition-colors" />
+                        <span className="text-sm text-gray-700">
+                          {item.label}
+                        </span>
+                      </button>
+                    ))}
+                  </div> */}
+
+                  {/* Logout */}
+                  <div className="py-2">
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-red-50 transition-colors text-red-600 group"
+                    >
+                      <LogOut className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                      <span className="text-sm font-semibold">Đăng xuất</span>
+                    </button>
+                  </div>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
           </div>
         </div>
-
-        {/* Mobile Navigation Menu */}
-        {/* {isMobileMenuOpen && (
-          <div className="lg:hidden border-t bg-white">
-            <nav className="px-4 py-3 space-y-1">
-              {navigationItems.map((item) => (
-                <button
-                  key={item.href}
-                  onClick={() => {
-                    router.push(item.href);
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all font-medium"
-                >
-                  <item.icon className="w-5 h-5" />
-                  {item.label}
-                </button>
-              ))}
-            </nav>
-          </div>
-        )} */}
       </div>
     </header>
   );
