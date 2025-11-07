@@ -2,10 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   Bell,
-  User,
-  Settings,
   LogOut,
   Menu,
   X,
@@ -22,7 +21,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuthStore } from "@/stores/auth.store";
 import { getAllMenuItems } from "@/lib/navigation";
-import Link from "next/link";
 
 interface DashboardHeaderProps {
   user: {
@@ -73,6 +71,7 @@ export default function DashboardHeader({
     const colors: Record<string, string> = {
       admin: "bg-red-500/80 border-red-500",
       sales: "bg-blue-500/80 border-blue-500",
+      sale: "bg-blue-500/80 border-blue-500",
       dev: "bg-green-500/80 border-green-500",
       customer: "bg-purple-500/80 border-purple-500",
     };
@@ -83,6 +82,7 @@ export default function DashboardHeader({
     const labels: Record<string, string> = {
       admin: "Quản trị viên",
       sales: "Nhân viên kinh doanh",
+      sale: "Nhân viên kinh doanh",
       dev: "Lập trình viên",
       customer: "Khách hàng",
     };
@@ -161,7 +161,7 @@ export default function DashboardHeader({
             </Link>
           </div>
 
-          <div className="hidden md:flex items-center flex-1 max-w-md ml-4">
+          {/* <div className="hidden md:flex items-center flex-1 max-w-md ml-4">
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 z-10" />
               <Input
@@ -169,7 +169,7 @@ export default function DashboardHeader({
                 className="pl-10 rounded-2xl border-gray-200 bg-white/70 backdrop-blur-sm text-gray-800 placeholder:text-gray-400"
               />
             </div>
-          </div>
+          </div> */}
 
           {/* Right Actions */}
           <div className="flex items-center gap-3">

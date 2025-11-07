@@ -16,7 +16,7 @@ export default function ServiceCard({
   onEdit,
 }: ServiceCardProps) {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-lg transition-shadow flex flex-col h-full">
+    <div className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-lg transition-shadow flex flex-col h-full w-full">
       {/* Status badges - fixed height */}
       <div className="flex gap-2 mb-3 h-6 items-start">
         {service.is_featured && (
@@ -40,34 +40,42 @@ export default function ServiceCard({
       <div className="text-xs text-blue-600 mb-2 h-4">{service.category}</div>
 
       {/* Title - fixed height */}
-      <h3 className="text-gray-900 mb-3 line-clamp-2 h-12">{service.name}</h3>
+      <h3 className="text-gray-900 mb-3 line-clamp-2 h-8 text-lg font-semibold">
+        {service.name}
+      </h3>
 
       {/* Description - fixed height */}
-      <p className="text-sm text-gray-600 mb-4 line-clamp-2 h-10">
+      <p className="text-base text-gray-600 mb-4 line-clamp-2 min-h-10">
         {service.short_description}
       </p>
 
       {/* Meta info */}
-      <div className="flex items-center gap-4 mb-4 text-xs text-gray-500">
+      <div className="flex items-center gap-4 mb-4 text-sm text-gray-500">
         <div className="flex items-center gap-1">
           <Clock className="w-3.5 h-3.5" />
           <span>
-            {service.estimated_duration_min}-{service.estimated_duration_max}{" "}
+            {service.estimated_duration_max === service.estimated_duration_min
+              ? service.estimated_duration_min
+              : `${service.estimated_duration_min} -
+                  ${service.estimated_duration_max}`}{" "}
             tuần
           </span>
         </div>
-        <div className="flex items-center gap-1">
+        {/* <div className="flex items-center gap-1">
           <Users className="w-3.5 h-3.5" />
           <span>{service.estimated_team_size} người</span>
-        </div>
+        </div> */}
       </div>
 
       {/* Price */}
       <div className="mb-4 pb-4 border-b border-gray-100">
-        <div className="text-xs text-gray-500 mb-1">Giá dự kiến</div>
-        <div className="text-sm text-gray-900">
-          {(service.price_range_min / 1000000).toFixed(0)}M -{" "}
-          {(service.price_range_max / 1000000).toFixed(0)}M VNĐ
+        <div className="text-sm text-gray-500 mb-1">Giá dự kiến</div>
+        <div className="text-base text-gray-900">
+          {service.price_range_min === service.price_range_max
+            ? `${(service.price_range_min / 1_000_000).toFixed(0)}M VNĐ`
+            : `${(service.price_range_min / 1_000_000).toFixed(0)}M - ${(
+                service.price_range_max / 1_000_000
+              ).toFixed(0)}M VNĐ`}
         </div>
       </div>
 

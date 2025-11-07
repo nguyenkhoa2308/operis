@@ -56,11 +56,11 @@ export default function Header() {
   ];
 
   const servicesItems = [
-    {
-      label: "Dịch vụ Tự động hóa",
-      href: "/services/automation",
-      description: "Hệ thống tự động thực hiện công việc",
-    },
+    // {
+    //   label: "Dịch vụ Tự động hóa",
+    //   href: "/services/automation",
+    //   description: "Hệ thống tự động thực hiện công việc",
+    // },
     {
       label: "Dịch vụ Quản trị",
       href: "/services/management",

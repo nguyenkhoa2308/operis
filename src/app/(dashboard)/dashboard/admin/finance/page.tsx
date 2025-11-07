@@ -329,7 +329,7 @@ export default function AdminFinancePage() {
         )}
 
         {/* Top Customers */}
-        {topCustomers!.total_customers > 0 && (
+        {topCustomers && topCustomers.total_customers > 0 && (
           <div className="bg-white rounded-xl shadow-lg p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">
               Top Customers by Revenue

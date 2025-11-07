@@ -1,9 +1,9 @@
 "use client";
 
 import { JSX } from "react";
-import RequestForm from "../form/RequestForm";
 import { Service, Challenge } from "@/types";
-// import Image from "next/image";
+import RequestForm from "../form/RequestForm";
+import { ImageWithFallback } from "../ImageWithFallback";
 
 interface ServiceAccordionProps {
   service: Service;
@@ -462,7 +462,7 @@ export default function ServiceAccordion({
               )}
 
               {/* Team Members with Ratings */}
-              {/* {service.team_structure?.members &&
+              {service.team_structure?.members &&
                 service.team_structure.members.length > 0 && (
                   <div>
                     <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -488,8 +488,8 @@ export default function ServiceAccordion({
                           className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg p-4 border border-purple-200 hover:shadow-md transition-shadow"
                         >
                           <div className="flex items-start gap-3">
-                            <Image
-                              src={member.avatar!}
+                            <ImageWithFallback
+                              src={member.avatar}
                               alt={member.name}
                               className="w-12 h-12 rounded-full border-2 border-white shadow-md"
                             />
@@ -518,7 +518,7 @@ export default function ServiceAccordion({
                       ))}
                     </div>
                   </div>
-                )} */}
+                )}
 
               {/* Registration Form */}
               <RequestForm serviceId={service.id} />

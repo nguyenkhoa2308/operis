@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import dayjs, { Dayjs } from "dayjs";
 import "dayjs/locale/vi";
-import toast, { Toaster } from "react-hot-toast";
+// import toast, { Toaster } from "react-hot-toast";
+import { toast } from "sonner";
 import {
   Bot,
   ArrowLeft,
@@ -96,33 +97,48 @@ function RegisterPageContent() {
   const validateForm = () => {
     // Check required fields
     if (!formData.full_name.trim()) {
-      alert("Vui lòng nhập họ và tên");
+      toast.error("Đăng ký thất bại", {
+        description: "Vui lòng nhập đầy đủ họ tên",
+        position: "top-right",
+      });
       return false;
     }
 
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
-      alert("Email không hợp lệ");
+      toast.error("Đăng ký thất bại", {
+        description: "Email không hợp lệ",
+        position: "top-right",
+      });
       return false;
     }
 
     // Phone validation (Vietnam format)
     const phoneRegex = /^(0|\+84)[3|5|7|8|9][0-9]{8}$/;
     if (!phoneRegex.test(formData.phone.replace(/\s/g, ""))) {
-      alert("Số điện thoại không hợp lệ");
+      toast.error("Đăng ký thất bại", {
+        description: "Số điện thoại không hợp lệ",
+        position: "top-right",
+      });
       return false;
     }
 
     // Password validation: min 6 chars
-    if (formData.password.length < 6) {
-      alert("Mật khẩu phải có ít nhất 6 ký tự");
+    if (formData.password.length < 8) {
+      toast.error("Đăng ký thất bại", {
+        description: "Mật khẩu phải có ít nhất 8 ký tự",
+        position: "top-right",
+      });
       return false;
     }
 
     // Check password match
     if (formData.password !== formData.confirmPassword) {
-      alert("Mật khẩu không khớp");
+      toast.error("Đăng ký thất bại", {
+        description: "Mật khẩu không khớp",
+        position: "top-right",
+      });
       return false;
     }
 
@@ -152,20 +168,18 @@ function RegisterPageContent() {
       });
 
       // Show success toast
-      toast.success(
-        "Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.",
-        {
-          duration: 5000,
-          position: "top-center",
-          style: {
-            background: "#10b981",
-            color: "#fff",
-            padding: "16px",
-            borderRadius: "12px",
-          },
-          icon: "📧",
-        }
-      );
+      toast.success("Đăng ký thành công!", {
+        duration: 5000,
+        position: "top-right",
+        // description: " Vui lòng kiểm tra email để xác thực tài khoản.",
+        style: {
+          background: "#10b981",
+          color: "#fff",
+          padding: "16px",
+          borderRadius: "12px",
+        },
+        icon: "📧",
+      });
 
       // Reset form
       setFormData({
@@ -226,7 +240,7 @@ function RegisterPageContent() {
 
   return (
     <div className="bg-white relative overflow-hidden">
-      <Toaster />
+      {/* <Toaster /> */}
       {/* Split Screen Layout */}
       <div className="grid lg:grid-cols-2">
         {/* Left Side - Brand & Visual */}

@@ -27,6 +27,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useAuthStore } from "@/stores/auth.store";
 import { toast } from "sonner";
+import { authAPI } from "@/lib/api";
 // import { useAuthConfig } from "@/hooks/useAuthConfig";
 // import { authAPI } from "@/lib/api";
 
@@ -86,7 +87,11 @@ function LoginPageContent() {
           description: "Đang chuyển hướng đến dashboard...",
           position: "top-right",
         });
-        router.replace(`/dashboard/${role === "dev" ? "developer" : role}`);
+        router.replace(
+          `/dashboard/${
+            role === "dev" ? "developer" : role === "sale" ? "sales" : role
+          }`
+        );
       } else {
         toast.error("Đăng nhập thất bại", {
           description: "Email hoặc mật khẩu không chính xác. Vui lòng thử lại.",
@@ -99,8 +104,13 @@ function LoginPageContent() {
       // Extract error message
       let errorMessage = "Đã xảy ra lỗi. Vui lòng thử lại.";
       if (error && typeof error === "object" && "response" in error) {
-        const axiosError = error as { response?: { data?: { message?: string; detail?: string } } };
-        errorMessage = axiosError.response?.data?.message || axiosError.response?.data?.detail || errorMessage;
+        const axiosError = error as {
+          response?: { data?: { message?: string; detail?: string } };
+        };
+        errorMessage =
+          axiosError.response?.data?.message ||
+          axiosError.response?.data?.detail ||
+          errorMessage;
       }
 
       toast.error("Lỗi đăng nhập", {
@@ -118,11 +128,45 @@ function LoginPageContent() {
     setLoading(true);
 
     // Simulate API call delay
-    // await authAPI.forgotPassword(resetEmail);
 
-    setLoading(false);
-    setIsForgotPassword(false);
-    setResetEmail("");
+    try {
+      const response = await authAPI.forgotPassword(resetEmail);
+      if (response.data.success) {
+        toast.success("Yêu cầu khôi phục mật khẩu đã được gửi", {
+          description: "Vui lòng kiểm tra hộp thư email của bạn để tiếp tục.",
+          position: "top-right",
+        });
+      } else {
+        toast.error("Không thể gửi email khôi phục!", {
+          description:
+            response.data.message ||
+            "Vui lòng thử lại sau hoặc liên hệ bộ phận hỗ trợ.",
+          position: "top-right",
+        });
+      }
+    } catch (error: unknown) {
+      // Extract error message
+      let errorMessage = "Đã xảy ra lỗi. Vui lòng thử lại.";
+      if (error && typeof error === "object" && "response" in error) {
+        const axiosError = error as {
+          response?: { data?: { message?: string; detail?: string } };
+        };
+        errorMessage =
+          axiosError.response?.data?.message ||
+          axiosError.response?.data?.detail ||
+          errorMessage;
+      }
+
+      toast.error("Không thể gửi email khôi phục!", {
+        description:
+          errorMessage || "Vui lòng thử lại sau hoặc liên hệ bộ phận hỗ trợ.",
+        position: "top-right",
+      });
+    } finally {
+      setLoading(false);
+      setIsForgotPassword(false);
+      setResetEmail("");
+    }
   };
 
   return (

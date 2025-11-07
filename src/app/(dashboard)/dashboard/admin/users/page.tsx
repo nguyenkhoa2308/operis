@@ -81,9 +81,47 @@ export default function AdminUsersPage() {
     }
   };
 
+  const validateForm = () => {
+    // Check required fields
+    // if (!createForm.full_name.trim()) {
+    //   toast.error("Đăng ký thất bại", {
+    //     description: "Vui lòng nhập đầy đủ họ tên",
+    //     position: "top-right",
+    //   });
+    //   return false;
+    // }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(createForm.email)) {
+      toast.error("Đăng ký thất bại", {
+        description: "Email không hợp lệ",
+        position: "top-right",
+      });
+      return false;
+    }
+
+    // Password validation: min 6 chars
+    if (createForm.password.length < 8) {
+      toast.error("Đăng ký thất bại", {
+        description: "Mật khẩu phải có ít nhất 8 ký tự",
+        position: "top-right",
+      });
+      return false;
+    }
+
+    return true;
+  };
+
   const handleCreateUser = async () => {
     if (!createForm.email || !createForm.password || !createForm.full_name) {
-      toast.error("Vui lòng điền đầy đủ thông tin");
+      toast.error("Vui lòng điền đầy đủ thông tin", {
+        position: "top-right",
+      });
+      return;
+    }
+
+    if (!validateForm()) {
       return;
     }
 
@@ -151,6 +189,7 @@ export default function AdminUsersPage() {
         "bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-200 text-red-700",
       sales:
         "bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 text-blue-700",
+      sale: "bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 text-blue-700",
       dev: "bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 text-green-700",
       customer:
         "bg-gradient-to-r from-purple-50 to-violet-50 border-2 border-purple-200 text-purple-700",
@@ -165,6 +204,7 @@ export default function AdminUsersPage() {
     const labels = {
       admin: "Quản trị viên",
       sales: "Nhân viên bán hàng",
+      sale: "Nhân viên bán hàng",
       dev: "Lập trình viên",
       customer: "Khách hàng",
     };

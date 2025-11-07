@@ -427,7 +427,8 @@ export interface Service {
   key_features: (string | Challenge)[]; // Can be strings OR challenge objects
   differentiators: string[];
   process_stages: ProcessStage[];
-  team_structure: Record<string, number>;
+  // team_structure: Record<string, number>;
+  team_structure: TeamStructure;
   estimated_team_size: number;
   estimated_duration_min: number;
   estimated_duration_max: number;
@@ -441,6 +442,19 @@ export interface Service {
   technologies: string[];
   created_at: string;
   updated_at: string;
+}
+
+export interface TeamStructure {
+  members: Member[];
+}
+
+export interface Member {
+  name: string;
+  role: string;
+  avatar: string;
+  rating: number;
+  experience: string;
+  description: string;
 }
 
 export interface ProcessStage {
@@ -462,30 +476,6 @@ export interface Challenge {
   title: string;
   description: string;
   solution?: string;
-}
-
-export interface ServiceSummary {
-  id: string;
-  name: string;
-  status: string;
-  created_at: string;
-  total_cost: number;
-  estimated_duration: number;
-}
-
-export interface ServiceDetail extends ServiceSummary {
-  description: string;
-  phases: {
-    name: string;
-    duration: number;
-    status: string;
-  }[];
-  team_members: {
-    name: string;
-    role: string;
-    avatar: string;
-  }[];
-  progress: number;
 }
 
 // ========================

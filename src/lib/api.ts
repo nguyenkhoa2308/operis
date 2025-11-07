@@ -188,6 +188,9 @@ export const authAPI = {
     rawAPI.post("/auth/google-auth", {
       google_token: idToken,
     }),
+  forgotPassword: (email: string) => {
+    return rawAPI.post("/password-reset/forgot-password", { email });
+  },
   // verifyEmail: (email: string) => rawAPI.post("/auth/verify-email", email),
   // resetPassword: (token: string, newPassword: string) =>
   //   rawAPI.post("/auth/reset-password", newPassword),
